@@ -22,6 +22,7 @@ Because I wasn't happy with the other (or lacking thereof) solutions available, 
 ## Running:
 > [!NOTE]
 > Serial devices **must** be plugged in at runtime in order to work! QMamehook will emit a warning message if no compatible devices are detected. Currently, only devices bearing the GUN4ALL or GUN4IR vendor IDs will be detected.
+>
 > Also keep in mind that QMamehook will only correctly work with COM port writes (`cmw`) to ports correlating to the intended player/slot number (usually 1-4) - this does not need to match the COM port number in Windows, as the index is based on the count of *verified COM devices detected* (meaning always starting from "1"), not their ports.
 ### For Linux:
  - AUR package coming soon!
