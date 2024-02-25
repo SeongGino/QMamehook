@@ -27,7 +27,9 @@ Because I wasn't happy with the other (or lacking thereof) solutions available, 
 ### For Linux:
  - AUR package coming soon!
  - Make sure your user is part of the `dialout` group (`# usermod -a -G dialout insertusernamehere`)
+
 Just run the `QMamehook` executable in a terminal; send an interrupt signal (or `pkill QMamehook`) to stop it.
+
 Game config files are searched in `~/.config/QMamehook/ini`, and the program output will indicate whether a correct file matching the `mame_start` message is found or not.
 
 ## Building:
