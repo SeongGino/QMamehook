@@ -2,10 +2,10 @@
 # QMamehook
 ###### "We have MAMEHOOKER at home." 
 
-A bare-bones implementation of a MAME network output client, made primarily for compatible lightgun systems, using MAMEHOOKER-compatible *`gamename.ini`* files.
+A bare-bones implementation of a MAME network output client, made primarily for compatible lightgun systems, using [MAMEHOOKER](https://dragonking.arcadecontrols.com/static.php?page=aboutmamehooker)-compatible *`gamename.ini`* files.
 
 ### Why WOULD you use this over MAMEHOOKER?
- - Cross-platform: i.e, works natively on Linux for native emulators, and (in theory) should work similarly for Windows.
+ - Cross-platform: i.e, works natively on Linux for native emulators, and the same code runs just as well on Windows.
  - Modern: Built on C++ & QT5/6, and made to interface with the MAME network output *standard*, meaning implicit support e.g. for RetroArch cores that use TCP localhost:8000 for feeding force feedback events.
  - Small & Simple: runs in the background with a single command, no admin privileges necessary.
  - Designed for light guns: Made for and exclusively compatible with the serial port interface used by PC light gun systems (which currently is [IR-GUN4ALL](https://github.com/SeongGino/ir-light-gun-plus) and [GUN4IR](https://forum.arcadecontrols.com/index.php/topic,161189.0.html)).
@@ -23,7 +23,7 @@ Because I wasn't happy with the other (or lacking thereof) solutions available, 
 > [!NOTE]
 > Serial devices **must** be plugged in at runtime in order to work! QMamehook will emit a warning message if no compatible devices are detected. Currently, only devices bearing the GUN4ALL or GUN4IR vendor IDs will be detected.
 >
-> Also keep in mind that QMamehook will only correctly work with COM port writes (`cmw`) to ports correlating to the intended player/slot number (usually 1-4) - this does not need to match the COM port number in Windows, as the index is based on the count of *verified COM devices detected* (meaning always starting from "1"), not their ports.
+> Also keep in mind that QMamehook will only correctly work with COM port writes (`cmw`) to ports **correlating to the intended player/slot number** (usually 1-4) - this does not need to match the COM port number in Windows, as the index is based on the count of *verified COM devices detected* (meaning always starting from "1"), not their ports.
 ### For Linux:
  - AUR package coming soon!
  - Make sure your user is part of the `dialout` group (`# usermod -a -G dialout insertusernamehere`)
@@ -31,6 +31,12 @@ Because I wasn't happy with the other (or lacking thereof) solutions available, 
 Just run the `QMamehook` executable in a terminal; send an interrupt signal (or `pkill QMamehook`) to stop it.
 
 Game config files are searched in `~/.config/QMamehook/ini`, and the program output will indicate whether a correct file matching the `mame_start` message is found or not.
+### For Windows:
+ - Download the latest release zip.
+ - Extract the `QMamehook` folder to somewhere you can easily access - `QMamehook.exe` should be right beside `QT5Core.dll`, `QT5Network.dll`, and `QT5SerialPort.dll`.
+ - Launch `QMamehook.exe`
+
+Game config files are searched in `%LOCALAPPDATA%/QMamehooker/QMamehooker/ini` (yes, that's TWO QMamehooker folders, oops), and the program output will indicate whether a correct file matching the `mame_start` message is found or not.
 
 ## Building:
 #### Requires `qt-base` & `qt-serialport` (QT5/QT6)
