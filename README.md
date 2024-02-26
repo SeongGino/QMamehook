@@ -9,7 +9,7 @@ A bare-bones implementation of a MAME network output client, made primarily for 
  - Modern: Built on C++ & QT5/6, and made to interface with the MAME network output *standard*, meaning implicit support e.g. for RetroArch cores that use TCP localhost:8000 for feeding force feedback events.
  - Small & Simple: runs in the background with a single command, no admin privileges necessary.
  - Designed for light guns: Made for and exclusively compatible with the serial port interface used by PC light gun systems (which currently is [IR-GUN4ALL](https://github.com/SeongGino/ir-light-gun-plus) and [GUN4IR](https://forum.arcadecontrols.com/index.php/topic,161189.0.html)).
- - Compatible with MAMEHOOKER configs: Uses the same files verbatim, no conversions needed!
+ - Compatible with MAMEHOOKER configs: Uses the same *.ini* files verbatim, no changes needed!
 
 ### Why would you NOT use this over MAMEHOOKER?
  - It's barebones: Strictly only supports light gun peripherals over serial (COM devices).
@@ -36,7 +36,7 @@ Game config files are searched in `~/.config/QMamehook/ini`, and the program out
  - Extract the `QMamehook` folder to somewhere you can easily access - `QMamehook.exe` should be right beside `QT5Core.dll`, `QT5Network.dll`, and `QT5SerialPort.dll`.
  - Launch `QMamehook.exe`
 
-Game config files are searched in `%LOCALAPPDATA%/QMamehooker/QMamehooker/ini` (yes, that's TWO QMamehooker folders, oops), and the program output will indicate whether a correct file matching the `mame_start` message is found or not.
+Game config files are searched in `%LOCALAPPDATA%/QMamehook/QMamehook/ini` (yes, that's TWO QMamehook folders, oops), and the program output will indicate whether a correct file matching the `mame_start` message is found or not.
 
 ## Building:
 #### Requires `qt-base` & `qt-serialport` (QT5/QT6)
