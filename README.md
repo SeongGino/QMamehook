@@ -25,6 +25,7 @@ Because I wasn't happy with the other (or lacking thereof) solutions available, 
 >
 > Also keep in mind that QMamehook will only correctly work with COM port writes (`cmw`) to ports **correlating to the intended player/slot number** (usually 1-4) - this does not need to match the COM port number in Windows, as the index is based on the count of *verified COM devices detected* (meaning always starting from "1"), not their ports.
 ### For Linux:
+##### Requirements: Anything with QT5 support.
  - AUR package coming soon!
  - Make sure your user is part of the `dialout` group (`# usermod -a -G dialout insertusernamehere`)
 
@@ -32,6 +33,7 @@ Just run the `QMamehook` executable in a terminal; send an interrupt signal (or 
 
 Game config files are searched in `~/.config/QMamehook/ini`, and the program output will indicate whether a correct file matching the `mame_start` message is found or not.
 ### For Windows:
+##### Requirements: Windows 7 and up.
  - Download the latest release zip.
  - Extract the `QMamehook` folder to somewhere you can easily access - `QMamehook.exe` should be right beside `QT5Core.dll`, `QT5Network.dll`, and `QT5SerialPort.dll`.
  - Launch `QMamehook.exe`
