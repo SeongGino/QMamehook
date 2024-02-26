@@ -134,6 +134,8 @@ void qhookerMain::readyRead()
                     if(portNum >= 0 && portNum < serialFoundList.count()) {
                         if(!serialPort[portNum].isOpen()) {
                             serialPort[portNum].open(QIODevice::WriteOnly);
+                            // Just in case Wendies complains:
+                            serialPort[portNum].setDataTerminalReady(true);
                             qInfo() << "Opened port no" << portNum+1;
                         } else {
                             qInfo() << "Waaaaait a second... Port" << portNum+1 << "is already open!";
