@@ -8,6 +8,12 @@ int main(int argc, char *argv[])
 
     qhookerMain mainApp;
 
+    QString cliArg = argv[1];
+    if(cliArg == "-v") {
+        mainApp.verbosity = true;
+        qInfo() << "Enabling verbose output!";
+    }
+
     // connect up the signals
     QObject::connect(&mainApp, SIGNAL(finished()),
                      &app, SLOT(quit()));

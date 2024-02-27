@@ -37,6 +37,8 @@ private:
 public:
     explicit qhookerMain(QObject *parent = 0);
 
+    bool verbosity = false;
+
     void quit();
 
 signals:
