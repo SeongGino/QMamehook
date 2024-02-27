@@ -140,7 +140,7 @@ void qhookerMain::readyRead()
                             serialPort[portNum].setDataTerminalReady(true);
                             qInfo() << "Opened port no" << portNum+1;
                         } else {
-                            qInfo() << "Waaaaait a second... Port" << portNum+1 << "is already open!";
+                            qWarning() << "Waaaaait a second... Port" << portNum+1 << "is already open!";
                         }
                     }
                 } else if(buffer[0].contains("cmw")) {
@@ -148,13 +148,11 @@ void qhookerMain::readyRead()
                     if(portNum >= 0 && portNum < serialFoundList.count()) {
                         if(serialPort[portNum].isOpen()) {
                             serialPort[portNum].write(buffer[0].mid(6).toLocal8Bit());
-                            if(serialPort[portNum].waitForBytesWritten(2000)) {
-                                qInfo() << "Wrote" << buffer[0].mid(6).toLocal8Bit() << "to port" << portNum+1;
-                            } else {
-                                qInfo() << "Wrote to port no" << portNum+1 << ", but wasn't sent in time apparently!?";
+                            if(!serialPort[portNum].waitForBytesWritten(2000)) {
+                                qWarning() << "Wrote to port no" << portNum+1 << ", but wasn't sent in time apparently!?";
                             }
                         } else {
-                            qInfo() << "Requested to write to port no" << portNum+1 << ", but it's not even open yet!";
+                            qWarning() << "Requested to write to port no" << portNum+1 << ", but it's not even open yet!";
                         }
                     }
                 }
@@ -185,9 +183,7 @@ void qhookerMain::readyRead()
                             uint8_t portNum = settingsMap[func].at(4).digitValue()-1;
                             if(portNum >= 0 && portNum < serialFoundList.count()) {
                                 serialPort[portNum].write(settingsMap[func].mid(6, settingsMap[func].indexOf("|")).toLocal8Bit());
-                                if(serialPort[portNum].waitForBytesWritten(2000)) {
-                                //    qInfo() << "Wrote" << buffer[0].mid(6).toLocal8Bit() << "to port" << portNum+1;
-                                } else {
+                                if(!serialPort[portNum].waitForBytesWritten(2000)) {
                                     qWarning() << "Wrote to port no" << portNum+1 << ", but wasn't sent in time apparently!?";
                                 }
                             }
@@ -201,9 +197,7 @@ void qhookerMain::readyRead()
                                 QString temp = settingsMap[func];
                                 temp = temp.replace("%s%", "%1", Qt::CaseInsensitive).arg(1);
                                 serialPort[portNum].write(temp.mid(6).toLocal8Bit());
-                                if(serialPort[portNum].waitForBytesWritten(2000)) {
-                                    //    qInfo() << "Wrote" << buffer[0].mid(6).toLocal8Bit() << "to port" << portNum+1;
-                                } else {
+                                if(!serialPort[portNum].waitForBytesWritten(2000)) {
                                     qWarning() << "Wrote to port no" << portNum+1 << ", but wasn't sent in time apparently!?";
                                 }
                             }
@@ -215,9 +209,7 @@ void qhookerMain::readyRead()
                             uint8_t portNum = settingsMap[func].at(4).digitValue()-1;
                             if(portNum >= 0 && portNum < serialFoundList.count()) {
                                 serialPort[portNum].write(settingsMap[func].mid(6).toLocal8Bit());
-                                if(serialPort[portNum].waitForBytesWritten(2000)) {
-                                    //    qInfo() << "Wrote" << buffer[0].mid(6).toLocal8Bit() << "to port" << portNum+1;
-                                } else {
+                                if(!serialPort[portNum].waitForBytesWritten(2000)) {
                                     qWarning() << "Wrote to port no" << portNum+1 << ", but wasn't sent in time apparently!?";
                                 }
                             }
@@ -232,9 +224,7 @@ void qhookerMain::readyRead()
                             uint8_t portNum = settingsMap[func].at(settingsMap[func].lastIndexOf("cmw")+4).digitValue()-1;
                             if(portNum >= 0 && portNum < serialFoundList.count()) {
                                 serialPort[portNum].write(settingsMap[func].mid(settingsMap[func].lastIndexOf("cmw")).toLocal8Bit());
-                                if(serialPort[portNum].waitForBytesWritten(2000)) {
-                                    //qInfo() << "Wrote" << buffer[0].mid(6).toLocal8Bit() << "to port" << portNum+1;
-                                } else {
+                                if(!serialPort[portNum].waitForBytesWritten(2000)) {
                                     qWarning() << "Wrote to port no" << portNum+1 << ", but wasn't sent in time apparently!?";
                                 }
                             }
@@ -248,9 +238,7 @@ void qhookerMain::readyRead()
                                 QString temp = settingsMap[func];
                                 temp = temp.replace("%s%", "%1", Qt::CaseInsensitive).arg(0);
                                 serialPort[portNum].write(temp.mid(6).toLocal8Bit());
-                                if(serialPort[portNum].waitForBytesWritten(2000)) {
-                                    //    qInfo() << "Wrote" << buffer[0].mid(6).toLocal8Bit() << "to port" << portNum+1;
-                                } else {
+                                if(!serialPort[portNum].waitForBytesWritten(2000)) {
                                     qWarning() << "Wrote to port no" << portNum+1 << ", but wasn't sent in time apparently!?";
                                 }
                             }
@@ -262,9 +250,7 @@ void qhookerMain::readyRead()
                             uint8_t portNum = settingsMap[func].at(4).digitValue()-1;
                             if(portNum >= 0 && portNum < serialFoundList.count()) {
                                 serialPort[portNum].write(settingsMap[func].mid(6).toLocal8Bit());
-                                if(serialPort[portNum].waitForBytesWritten(2000)) {
-                                    //    qInfo() << "Wrote" << buffer[0].mid(6).toLocal8Bit() << "to port" << portNum+1;
-                                } else {
+                                if(!serialPort[portNum].waitForBytesWritten(2000)) {
                                     qWarning() << "Wrote to port no" << portNum+1 << ", but wasn't sent in time apparently!?";
                                 }
                             }
