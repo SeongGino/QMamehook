@@ -1,4 +1,6 @@
 #include "qhookermain.h"
+#include <QDir>
+#include <QFile>
 #include <QSettings>
 #include <QStandardPaths>
 #include <QThread>
@@ -12,7 +14,7 @@ qhookerMain::qhookerMain(QObject *parent)
 
 void qhookerMain::run()
 {
-    qDebug() << "Main app is running!";
+    //qDebug() << "Main app is running!";
     tcpSocket = new QTcpSocket();
     connect(tcpSocket, SIGNAL(readyRead()), this, SLOT(readyRead()));
 
@@ -94,7 +96,7 @@ void qhookerMain::SerialInit()
                serialFoundList[i].vendorIdentifier() == 9025) {
                 qInfo() << "Found device @" << serialFoundList[i].systemLocation();
             } else {
-                qDebug() << "Deleting dummy device" << serialFoundList[i].systemLocation();
+                //qDebug() << "Deleting dummy device" << serialFoundList[i].systemLocation();
                 serialFoundList.removeAt(i);
             }
         }
@@ -164,8 +166,12 @@ void qhookerMain::readyRead()
         buffer.removeLast();
         while(!buffer.isEmpty()) {
             buffer[0] = buffer[0].trimmed();
+            if(verbosity) {
+                qInfo() << buffer[0];
+            }
             QString func = buffer[0].left(buffer[0].indexOf(" "));
             // do some comparisons with the settings here.
+            // checking if the setting exists
             if(!settingsMap[func].isEmpty()) {
                 //qDebug() << "Hey, this one isn't empty!"; // testing
                 //qDebug() << settingsMap[func]; // testing
@@ -265,6 +271,11 @@ void qhookerMain::readyRead()
                         }
                     }
                 }
+            // if setting does not exist, register it
+            } else if(!settings->contains(func) && func != "mame_stop") {
+                settings->beginGroup("Output");
+                settings->setValue(func, "");
+                settings->endGroup();
             }
             // then finally:
             buffer.removeFirst();
@@ -277,6 +288,14 @@ void qhookerMain::LoadConfig(QString path)
     settings = new QSettings(path, QSettings::IniFormat);
     if(!settings->contains("MameStart")) {
         qWarning() << "Error loading file at:" << path;
+        if(!QFile::exists(path) && !path.contains("__empty")) {
+            settings->setValue("MameStart", "");
+            settings->setValue("MameStop", "");\
+            settings->setValue("StateChange", "");
+            settings->setValue("OnRotate", "");
+            settings->setValue("OnPause", "");
+            settings->setValue("KeyStates/RefreshTime", "");
+        }
     } else {
         qInfo() << "Loading:" << path;
     }
