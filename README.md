@@ -13,9 +13,9 @@ A bare-bones implementation of a MAME network output client, made primarily for 
 
 ### Why would you NOT use this over MAMEHOOKER?
  - It's barebones: Strictly only supports light gun peripherals over serial (COM devices).
- - It's primarily for Linux: which has no options for this specific niche (Linux light gun users wanting native force feedback) - either [LEDSpicer](https://github.com/meduzapat/LEDSpicer) for Linux, or MAMEHOOKER itself for Windows might be better if you need more devices support.
+ - It's primarily for Linux: which has no options for this specific niche (Linux home light gun users wanting native force feedback) - for more elaborate setups, either [LEDSpicer](https://github.com/meduzapat/LEDSpicer) for Linux, or MAMEHOOKER itself for Windows might be better if you need more devices support.
  - Only supports MAME network output standard: for [DemulShooter](https://github.com/argonlefou/DemulShooter) users, that means MAMEHOOKER is still absolutely required for e.g. TeknoParrot/JConfig games or native Windows games et al (at least, until they too adopt the MAME network standard).
- - It's made by an idiot: Seriously, this is the first of two things I ever made for desktop PCs and my first pair of things using QT. *The entire effectively codebase is like two pages of a single C++ class.* Contributions are welcome though to improve this!
+ - It's made by an idiot: Seriously, this is the first of two things I ever made for desktop PCs and my first pair of things using QT. *The entire effective codebase is like two pages of a single C++ class.* Contributions are welcome though to improve this!
 
 ### But y tho?
 Because I wasn't happy with the other (or lacking thereof) solutions available, none of which supported simple serial devices for my lightguns, and I got very impatient and whipped this up in a day while working on GUN4ALL-GUI.
@@ -25,6 +25,9 @@ Because I wasn't happy with the other (or lacking thereof) solutions available, 
 > Serial devices **must** be plugged in at runtime in order to work! QMamehook will emit a warning message if no compatible devices are detected. Currently, only devices bearing the GUN4ALL or GUN4IR vendor IDs will be detected.
 >
 > Also keep in mind that QMamehook will only correctly work with COM port writes (`cmw`) to ports **correlating to the intended player/slot number** (usually 1-4) - this does not need to match the COM port number in Windows, as the index is based on the count of *verified COM devices detected* (meaning always starting from "1"), not their ports.
+
+> [!TIP]
+> Running `QMamehook -v` will enable verbose output, which prints the exact output stream being received from the server app! Use this to e.g. see what MAME is sending out.
 ### For Linux:
 ##### Requirements: Anything with QT5 support.
  - AUR package coming soon!
@@ -65,7 +68,7 @@ And run:
 ## TODO:
  - Fix code quality; getting a QT CLI app to use signals is kind of a PITA and the quit/finished signals aren't working rn for some reason.
  - Maybe other devices support soon?
- - Implement a way of generating config files and detecting all of a given game's outputs if none are found - currently, the best way to know all the output channels a game has is to use MAMEHOOKER still.
+ - Currently, configs are generated with whatever outputs are detected in the game session; is there a better way of grabbing all possible outputs rn? Or nah?
 
 ## Thanks
  - ArcadeForums users, whose collective support on the GUN4ALL project are what inspired this side hustle.
