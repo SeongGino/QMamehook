@@ -38,7 +38,7 @@ void qhookerMain::run()
                     // mame has disconnected, so exit out.
                     qInfo() << "MAME exiting, disconnecting...";
                     tcpSocket->abort();
-                    qDebug() << "Unloading config file.";
+                    //qDebug() << "Unloading config file.";
                     gameName.clear();
                     if(settings) {
                         delete settings;
