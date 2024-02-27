@@ -67,6 +67,7 @@ And run:
 
 ## TODO:
  - Fix code quality; getting a QT CLI app to use signals is kind of a PITA and the quit/finished signals aren't working rn for some reason.
+ - Support comment-split actions.
  - Maybe other devices support soon?
  - Currently, configs are generated with whatever outputs are detected in the game session; is there a better way of grabbing all possible outputs rn? Or nah?
 
