@@ -160,98 +160,98 @@ void qhookerMain::readyRead()
             }
         }
     } else {
-        buffer = input.split('\r');
-        buffer.removeLast();
+        buffer = input.split('\r', Qt::SkipEmptyParts);
         while(!buffer.isEmpty()) {
             buffer[0] = buffer[0].trimmed();
             if(verbosity) {
                 qInfo() << buffer[0];
             }
-            QString func = buffer[0].left(buffer[0].indexOf(" "));
-            // do some comparisons with the settings here.
-            // checking if the setting exists
+            QString func = buffer[0].left(buffer[0].indexOf(' '));
+            // checking if a command for this input channel exists
             if(!settingsMap[func].isEmpty()) {
                 //qDebug() << "Hey, this one isn't empty!"; // testing
                 //qDebug() << settingsMap[func]; // testing
                 if(buffer[0].rightRef(1).toInt()) {
-                    // Section One.
+                    //////// Section One.
+                    //
                     // if contains |, it's a two-function switch.
-                    if(settingsMap[func].contains("|")) {
-                        // left is for 0, right is for 1. Does not need replacement, but ignore "nul"
-                        if(settingsMap[func].leftRef(settingsMap[func].indexOf("|")).contains("cmw")) {
-                            // we can safely assume that "cmw" on the left side will always be at a set place.
-                            uint8_t portNum = settingsMap[func].at(4).digitValue()-1;
-                            if(portNum >= 0 && portNum < serialFoundList.count()) {
-                                serialPort[portNum].write(settingsMap[func].mid(6, settingsMap[func].indexOf("|")).toLocal8Bit());
-                                if(!serialPort[portNum].waitForBytesWritten(2000)) {
-                                    qWarning() << "Wrote to port no" << portNum+1 << ", but wasn't sent in time apparently!?";
+                    if(settingsMap[func].contains('|')) {
+                        // left is for 0. Does not need replacement, but ignore "nul"
+                        QStringList action = settingsMap[func].mid(settingsMap[func].indexOf('|')+1).split(',', Qt::SkipEmptyParts);
+                        for(uint8_t i = 0; i < action.length(); i++) {
+                            if(action[i].contains("cmw")) {
+                                uint8_t portNum = action[i].at(action[i].indexOf("cmw")+4).digitValue()-1;
+                                if(portNum >= 0 && portNum < serialFoundList.count()) {
+                                    // if contains %s%, s needs to be replaced by state.
+                                    // yes, even here, in case of stupid.
+                                    if(action[i].contains("%s%")) {
+                                        action[i] = action[i].replace("%s%", "%1").arg(1);
+                                    }
+                                    serialPort[portNum].write(action[i].mid(action[i].indexOf("cmw")+6).toLocal8Bit());
+                                    if(!serialPort[portNum].waitForBytesWritten(2000)) {
+                                        qWarning() << "Wrote to port no" << portNum+1 << ", but wasn't sent in time apparently!?";
+                                    }
                                 }
                             }
                         }
-                    // if contains %s%, s needs to be replaced by state.
-                    } else if(settingsMap[func].contains("%s%", Qt::CaseInsensitive)) {
-                        if(settingsMap[func].contains("cmw")) {
-                            // we can safely assume that "cmw" will always be at a set place.
-                            uint8_t portNum = settingsMap[func].at(4).digitValue()-1;
-                            if(portNum >= 0 && portNum < serialFoundList.count()) {
-                                QString temp = settingsMap[func];
-                                temp = temp.replace("%s%", "%1", Qt::CaseInsensitive).arg(1);
-                                serialPort[portNum].write(temp.mid(6).toLocal8Bit());
-                                if(!serialPort[portNum].waitForBytesWritten(2000)) {
-                                    qWarning() << "Wrote to port no" << portNum+1 << ", but wasn't sent in time apparently!?";
-                                }
-                            }
-                        }
-                    // ...or it has neither. Their funeral.
                     } else {
-                        if(settingsMap[func].contains("cmw")) {
-                            // we can safely assume that "cmw" will always be at a set place.
-                            uint8_t portNum = settingsMap[func].at(4).digitValue()-1;
-                            if(portNum >= 0 && portNum < serialFoundList.count()) {
-                                serialPort[portNum].write(settingsMap[func].mid(6).toLocal8Bit());
-                                if(!serialPort[portNum].waitForBytesWritten(2000)) {
-                                    qWarning() << "Wrote to port no" << portNum+1 << ", but wasn't sent in time apparently!?";
+                        QStringList action = settingsMap[func].split(',', Qt::SkipEmptyParts);
+                        for(uint8_t i = 0; i < action.length(); i++) {
+                            if(action[i].contains("cmw")) {
+                                // we can safely assume that "cmw" will always be at a set place.
+                                uint8_t portNum = action[i].at(action[i].indexOf("cmw")+4).digitValue()-1;
+                                if(portNum >= 0 && portNum < serialFoundList.count()) {
+                                    // if contains %s%, s needs to be replaced by state.
+                                    if(action[i].contains("%s%")) {
+                                        action[i] = action[i].replace("%s%", "%1").arg(1);
+                                    }
+                                    serialPort[portNum].write(action[i].mid(action[i].indexOf("cmw")+6).toLocal8Bit());
+                                    if(!serialPort[portNum].waitForBytesWritten(2000)) {
+                                        qWarning() << "Wrote to port no" << portNum+1 << ", but wasn't sent in time apparently!?";
+                                    }
                                 }
                             }
                         }
                     }
                 } else {
-                    // Section Zero.
+                    //////// Section Zero.
+                    //
                     // if contains |, it's a two-function switch.
-                    if(settingsMap[func].contains("|")) {
+                    if(settingsMap[func].contains('|')) {
                         // right is for 1. Does not need replacement, but ignore "nul"
-                        if(settingsMap[func].midRef(settingsMap[func].lastIndexOf("|")).contains("cmw")) {
-                            uint8_t portNum = settingsMap[func].at(settingsMap[func].lastIndexOf("cmw")+4).digitValue()-1;
-                            if(portNum >= 0 && portNum < serialFoundList.count()) {
-                                serialPort[portNum].write(settingsMap[func].mid(settingsMap[func].lastIndexOf("cmw")).toLocal8Bit());
-                                if(!serialPort[portNum].waitForBytesWritten(2000)) {
-                                    qWarning() << "Wrote to port no" << portNum+1 << ", but wasn't sent in time apparently!?";
+                        QStringList action = settingsMap[func].left(settingsMap[func].indexOf('|')).split(',', Qt::SkipEmptyParts);
+                        for(uint8_t i = 0; i < action.length(); i++) {
+                            if(action[i].contains("cmw")) {
+                                // we can safely assume that "cmw" on the left side will always be at a set place.
+                                uint8_t portNum = action[i].at(action[i].indexOf("cmw")+4).digitValue()-1;
+                                if(portNum >= 0 && portNum < serialFoundList.count()) {
+                                    // if contains %s%, s needs to be replaced by state.
+                                    // yes, even here, in case of stupid.
+                                    if(action[i].contains("%s%")) {
+                                        action[i] = action[i].replace("%s%", "%1").arg(0);
+                                    }
+                                    serialPort[portNum].write(action[i].mid(action[i].indexOf("cmw")+6).toLocal8Bit());
+                                    if(!serialPort[portNum].waitForBytesWritten(2000)) {
+                                        qWarning() << "Wrote to port no" << portNum+1 << ", but wasn't sent in time apparently!?";
+                                    }
                                 }
                             }
                         }
-                    // if contains %s%, s needs to be replaced by state.
-                    } else if(settingsMap[func].contains("%s%", Qt::CaseInsensitive)) {
-                        if(settingsMap[func].contains("cmw")) {
-                            // we can safely assume that "cmw" will always be at a set place.
-                            uint8_t portNum = settingsMap[func].at(4).digitValue()-1;
-                            if(portNum >= 0 && portNum < serialFoundList.count()) {
-                                QString temp = settingsMap[func];
-                                temp = temp.replace("%s%", "%1", Qt::CaseInsensitive).arg(0);
-                                serialPort[portNum].write(temp.mid(6).toLocal8Bit());
-                                if(!serialPort[portNum].waitForBytesWritten(2000)) {
-                                    qWarning() << "Wrote to port no" << portNum+1 << ", but wasn't sent in time apparently!?";
-                                }
-                            }
-                        }
-                    // ...or it has neither. Their funeral.
                     } else {
-                        if(settingsMap[func].contains("cmw")) {
-                            // we can safely assume that "cmw" will always be at a set place.
-                            uint8_t portNum = settingsMap[func].at(4).digitValue()-1;
-                            if(portNum >= 0 && portNum < serialFoundList.count()) {
-                                serialPort[portNum].write(settingsMap[func].mid(6).toLocal8Bit());
-                                if(!serialPort[portNum].waitForBytesWritten(2000)) {
-                                    qWarning() << "Wrote to port no" << portNum+1 << ", but wasn't sent in time apparently!?";
+                        QStringList action = settingsMap[func].split(',', Qt::SkipEmptyParts);
+                        for(uint8_t i = 0; i < action.length(); i++) {
+                            if(action[i].contains("cmw")) {
+                                // we can safely assume that "cmw" will always be at a set place.
+                                uint8_t portNum = action[i].at(action[i].indexOf("cmw")+4).digitValue()-1;
+                                if(portNum >= 0 && portNum < serialFoundList.count()) {
+                                    // if contains %s%, s needs to be replaced by state.
+                                    if(action[i].contains("%s%")) {
+                                        action[i] = action[i].replace("%s%", "%1").arg(0);
+                                    }
+                                    serialPort[portNum].write(action[i].mid(action[i].indexOf("cmw")+6).toLocal8Bit());
+                                    if(!serialPort[portNum].waitForBytesWritten(2000)) {
+                                        qWarning() << "Wrote to port no" << portNum+1 << ", but wasn't sent in time apparently!?";
+                                    }
                                 }
                             }
                         }
@@ -285,12 +285,15 @@ void qhookerMain::LoadConfig(QString path)
     } else {
         qInfo() << "Loading:" << path;
     }
-    //qDebug() << settings->allKeys();
     settings->beginGroup("Output");
     QStringList settingsTemp = settings->childKeys();
     for(uint8_t i = 0; i < settingsTemp.length(); i++) {
-        settingsMap[settingsTemp[i]] = settings->value(settingsTemp[i]).toString();
+        // QSettings splits anything with a comma, so we have to stitch the Q-splitted value back together.
+        if(settings->value(settingsTemp[i]).type() == QVariant::StringList) {
+            settingsMap[settingsTemp[i]] = settings->value(settingsTemp[i]).toStringList().join(",");
+        } else {
+            settingsMap[settingsTemp[i]] = settings->value(settingsTemp[i]).toString();
+        }
     }
-    //qDebug() << settingsMap;
     settings->endGroup();
 }
