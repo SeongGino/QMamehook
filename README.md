@@ -30,7 +30,8 @@ Because I wasn't happy with the other (or lacking thereof) solutions available, 
 > Running `QMamehook -v` will enable verbose output, which prints the exact output stream being received from the server app! Use this to e.g. see what MAME is sending out.
 ### For Linux:
 ##### Requirements: Anything with QT5 support.
- - AUR package coming soon!
+ - Arch Linux: Install `qmamehook` [from the AUR.](https://aur.archlinux.org/packages/qmamehook)
+ - Other distros: Try using the latest release binary (built for Ubuntu 20.04 LTS, but should work for most distros?)
  - Make sure your user is part of the `dialout` group (`# usermod -a -G dialout insertusernamehere`)
 
 Just run the `QMamehook` executable in a terminal; send an interrupt signal (or `pkill QMamehook`) to stop it.
