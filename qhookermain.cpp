@@ -34,13 +34,20 @@ void qhookerMain::run()
             break;
         case QAbstractSocket::ConnectedState:
             while(tcpSocket.state() == QAbstractSocket::ConnectedState) {
+                // in case of emergency for wendies, set to (+)1 instead
+                // possible performance implications here?
+                #ifdef Q_OS_WIN
+                if(tcpSocket.waitForReadyRead(1)) {
+                #else
                 if(tcpSocket.waitForReadyRead(-1)) {
+                #endif // Q_OS_WIN
                     while(!tcpSocket.atEnd()) {
                         ReadyRead();
                     }
+                }
                 // Apparently wendies maybe possibly might make false positives here,
-                // so check if we have a waiting buffer, to at least stop it from ending early.
-                } else if(!tcpSocket.bytesAvailable()) {
+                // so check if the error is actually the host being closed, to at least stop it from ending early.
+                if(tcpSocket.error() == QAbstractSocket::RemoteHostClosedError) {
                     qInfo() << "Server closing, disconnecting...";
                     tcpSocket.abort();
                     if(!gameName.isEmpty()) {
