@@ -18,7 +18,7 @@ private:
 
     QSettings *settings;
 
-    QTcpSocket *tcpSocket;
+    QTcpSocket tcpSocket;
 
     QSerialPort *serialPort;
 
@@ -38,6 +38,8 @@ private:
 
     void GameStarted(QString input);
 
+    void ReadyRead();
+
 public:
     explicit qhookerMain(QObject *parent = 0);
 
@@ -53,8 +55,8 @@ public slots:
 
     void aboutToQuitApp();
 
-private slots:
-    void readyRead();
+//private slots:
+
 };
 
 #endif // QHOOKERMAIN_H

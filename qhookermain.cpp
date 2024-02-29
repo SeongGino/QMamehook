@@ -15,35 +15,38 @@ qhookerMain::qhookerMain(QObject *parent)
 void qhookerMain::run()
 {
     //qDebug() << "Main app is running!";
-    tcpSocket = new QTcpSocket();
-    connect(tcpSocket, SIGNAL(readyRead()), this, SLOT(readyRead()));
+    //connect(&tcpSocket, &QAbstractSocket::readyRead, this, &qhookerMain::ReadyRead);
+    //connect(&tcpSocket, &QAbstractSocket::errorOccurred, this, &qhookerMain::errorOccurred);
 
     SerialInit();
 
-    qInfo() << "Waiting for MAME Network Output @ localhost:8000 ...";
+    qInfo() << "Waiting for MAME-compatible Network Output @ localhost:8000 ...";
 
     for(;;) {
-        switch(tcpSocket->state()) { // oh, bite me QT designer--these two are the only ones I need. :/
+        switch(tcpSocket.state()) { // oh, bite me QT designer--these two are the only ones I need. :/
         case QAbstractSocket::UnconnectedState:
-            tcpSocket->connectToHost("localhost", 8000);
-            if(tcpSocket->waitForConnected(5000)) {
-                qInfo() << "Connected to MAME instance!";
+            tcpSocket.connectToHost("localhost", 8000);
+            if(tcpSocket.waitForConnected(5000)) {
+                qInfo() << "Connected to output server instance!";
             } else {
                 QThread::sleep(1);
             }
             break;
         case QAbstractSocket::ConnectedState:
-            while(tcpSocket->state() == QAbstractSocket::ConnectedState) {
-                if(!tcpSocket->waitForReadyRead(-1)) {
-                    // mame has disconnected, so exit out.
-                    qInfo() << "MAME exiting, disconnecting...";
-                    tcpSocket->abort();
-                    // in case we exit without connecting to a game (*coughFLYCASTcough*)
+            while(tcpSocket.state() == QAbstractSocket::ConnectedState) {
+                if(tcpSocket.waitForReadyRead(-1)) {
+                    while(!tcpSocket.atEnd()) {
+                        ReadyRead();
+                    }
+                } else {
+                    qInfo() << "Server closing, disconnecting...";
+                    tcpSocket.abort();
                     if(!gameName.isEmpty()) {
                         gameName.clear();
                         delete settings;
                         settingsMap.clear();
                     }
+                    // in case we exit without connecting to a game (*coughFLYCASTcough*)
                     for(uint8_t i = 0; i < serialFoundList.count(); i++) {
                         if(serialPort[i].isOpen()) {
                             serialPort[i].write("E");
@@ -55,7 +58,6 @@ void qhookerMain::run()
                             }
                         }
                     }
-                    break;
                 }
             }
             break;
@@ -282,15 +284,16 @@ void qhookerMain::GameStarted(QString input)
 }
 
 
-void qhookerMain::readyRead()
+void qhookerMain::ReadyRead()
 {
     buffer.clear();
     if(gameName.isEmpty()) {
-        GameSearching(tcpSocket->readLine());
+        GameSearching(tcpSocket.readLine());
     } else {
-        GameStarted(tcpSocket->readLine());
+        GameStarted(tcpSocket.readLine());
     }
 }
+
 
 void qhookerMain::LoadConfig(QString path)
 {
