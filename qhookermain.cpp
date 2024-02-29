@@ -38,7 +38,9 @@ void qhookerMain::run()
                     while(!tcpSocket.atEnd()) {
                         ReadyRead();
                     }
-                } else {
+                // Apparently wendies maybe possibly might make false positives here,
+                // so check if we have a waiting buffer, to at least stop it from ending early.
+                } else if(!tcpSocket.bytesAvailable()) {
                     qInfo() << "Server closing, disconnecting...";
                     tcpSocket.abort();
                     if(!gameName.isEmpty()) {
