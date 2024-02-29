@@ -44,10 +44,9 @@ void qhookerMain::run()
                     while(!tcpSocket.atEnd()) {
                         ReadyRead();
                     }
-                }
                 // Apparently wendies maybe possibly might make false positives here,
                 // so check if the error is actually the host being closed, to at least stop it from ending early.
-                if(tcpSocket.error() == QAbstractSocket::RemoteHostClosedError) {
+                } else if(tcpSocket.error() == QAbstractSocket::RemoteHostClosedError) {
                     qInfo() << "Server closing, disconnecting...";
                     tcpSocket.abort();
                     if(!gameName.isEmpty()) {
