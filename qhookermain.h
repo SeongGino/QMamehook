@@ -34,6 +34,10 @@ private:
 
     void SerialInit();
 
+    void GameSearching(QString input);
+
+    void GameStarted(QString input);
+
 public:
     explicit qhookerMain(QObject *parent = 0);
 
