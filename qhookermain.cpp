@@ -186,12 +186,34 @@ void qhookerMain::GameStarted(QString input)
     buffer = input.split('\r', Qt::SkipEmptyParts);
     while(!buffer.isEmpty()) {
         buffer[0] = buffer[0].trimmed();
+
         if(verbosity) {
             qInfo() << buffer[0];
         }
+
         QString func = buffer[0].left(buffer[0].indexOf(' '));
+
+        // purge the current game name if stop signal is sent
+        if(func == "mame_stop") {
+            if(!gameName.isEmpty()) {
+                gameName.clear();
+                delete settings;
+                settingsMap.clear();
+                qInfo() << "mame_stop signal received, disconnecting.";
+                for(uint8_t i = 0; i < serialFoundList.count(); i++) {
+                    if(serialPort[i].isOpen()) {
+                        serialPort[i].write("E");
+                        if(serialPort[i].waitForBytesWritten(2000)) {
+                            qInfo() << "Closed port" << i+1;
+                            serialPort[i].close();
+                        } else {
+                            qInfo() << "Sent close signal to port" << i+1 << ", but wasn't sent in time apparently!?";
+                        }
+                    }
+                }
+            }
         // checking if a command for this input channel exists
-        if(!settingsMap[func].isEmpty()) {
+        } else if(!settingsMap[func].isEmpty()) {
             //qDebug() << "Hey, this one isn't empty!"; // testing
             //qDebug() << settingsMap[func]; // testing
             if(buffer[0].rightRef(1).toInt()) {
@@ -281,9 +303,10 @@ void qhookerMain::GameStarted(QString input)
                 }
             }
             // if setting does not exist, register it
-        } else if(!settings->contains(func) && func != "mame_stop") {
+        } else if(!settings->contains(func)) {
             settings->beginGroup("Output");
             settings->setValue(func, "");
+            settingsMap[func] = "";
             settings->endGroup();
         }
         // then finally:
