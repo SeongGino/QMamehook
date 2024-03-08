@@ -14,7 +14,7 @@ A bare-bones implementation of a MAME network output client, made primarily for 
 ### Why would you NOT use this over MAMEHOOKER?
  - It's barebones: Strictly only supports light gun peripherals over serial (COM devices).
  - It's primarily for Linux: which has no options for this specific niche (Linux home light gun users wanting native force feedback) - for more elaborate setups, either [LEDSpicer](https://github.com/meduzapat/LEDSpicer) for Linux, or MAMEHOOKER itself for Windows might be better if you need more devices support.
- - Only supports MAME network output standard: for [DemulShooter](https://github.com/argonlefou/DemulShooter) users, that means MAMEHOOKER is still absolutely required for e.g. TeknoParrot/JConfig games or native Windows games et al (at least, until they too adopt the MAME network standard).
+ - Only supports MAME network output standard: this means MAME (standalone and RetroArch cores), Flycast (standalone) and Windows games/emulators hooked with [DemulShooter v12.0+](https://github.com/argonlefou/DemulShooter/releases/tag/v12.0) are compatible. TeknoParrot is **not** supported until they also follow MAME's network output standard.
  - It's made by an idiot: Seriously, this is the first of two things I ever made for desktop PCs and my first pair of things using QT. *The entire effective codebase is like two pages of a single C++ class.* Contributions are welcome though to improve this!
 
 ### But y tho?
@@ -72,6 +72,7 @@ And run:
  - Currently, configs are generated with whatever outputs are detected in the game session; is there a better way of grabbing all possible outputs rn? Or nah?
 
 ## Thanks
+ - Argonlefou, for pointing out some bugs and letting me test their DemulShooter networks output support before release.
  - ArcadeForums users, whose collective support on the GUN4ALL project are what inspired this side hustle.
  - MAME, for the output signal standard that which this is made to communicate with.
  - Sleep deprivation
