@@ -148,7 +148,14 @@ void qhookerMain::GameSearching(QString input)
             }
             gameName = input.remove(0, input.indexOf("=")+1);
             qInfo() << gameName;
-            LoadConfig(QString(QStandardPaths::writableLocation(QStandardPaths::ConfigLocation) + "/QMamehook/ini/" + gameName + ".ini"));
+            
+            // TODO: there might be a better path for this? Trying to prevent "../QMamehook/QMamehook/ini" on Windows here.
+            #ifdef Q_OS_WIN
+                LoadConfig(QString(QStandardPaths::writableLocation(QStandardPaths::ConfigLocation) + "/ini/" + gameName + ".ini"));
+            #else
+                LoadConfig(QString(QStandardPaths::writableLocation(QStandardPaths::ConfigLocation) + "/QMamehook/ini/" + gameName + ".ini"));
+            #endif
+            
             if(settings->contains("MameStart")) {
                 //qInfo() << "Detected start statement:";
                 QStringList tempBuffer = settings->value("MameStart").toStringList();
