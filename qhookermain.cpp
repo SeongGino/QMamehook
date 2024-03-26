@@ -129,7 +129,7 @@ void qhookerMain::GameSearching(QString input)
 {
     // Split the output in case of connecting mid-way.
 #ifdef Q_OS_WIN
-    buffer = input.split("\\r", Qt::SkipEmptyParts);
+    buffer = input.split(QRegExp("[\r\n]"), Qt::SkipEmptyParts);
 #else
     buffer = input.split('\r', Qt::SkipEmptyParts);
 #endif // Q_OS_WIN
