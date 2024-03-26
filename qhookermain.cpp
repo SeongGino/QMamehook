@@ -145,7 +145,7 @@ void qhookerMain::GameSearching(QString input)
                     settingsMap.clear();
                 }
             }
-            gameName = buffer[0].mid(input.indexOf('=')+1).trimmed();
+            gameName = buffer[0].mid(input.indexOf('=')+2).trimmed();
             qInfo() << gameName;
 
             if(customPathSet) {
