@@ -103,7 +103,7 @@ void qhookerMain::SerialInit()
         for(int i = serialFoundList.length() - 1; i >= 0; --i) {
             // Detect GUN4ALL and GUN4IR guns (are we the only ones that support this?)
             if(serialFoundList[i].vendorIdentifier() == 2336 ||
-               serialFoundList[i].vendorIdentifier() == 9025 || 
+               serialFoundList[i].vendorIdentifier() == 9025 ||
                serialFoundList[i].vendorIdentifier() == 13939) {
                 qInfo() << "Found device @" << serialFoundList[i].systemLocation();
             } else {
@@ -134,7 +134,7 @@ void qhookerMain::GameSearching(QString input)
         buffer[0] = buffer[0].trimmed();
 
         // flycast outputs its start signal with code "game" using a game's full title instead of a mame zip name
-        if(buffer[0].contains("mame_start =") || input.contains("game =")) {
+        if(buffer[0].startsWith("mame_start =") || input.startsWith("game =")) {
             qInfo() << "Detected game name!";
             input.remove(" ");
             input = input.trimmed();
