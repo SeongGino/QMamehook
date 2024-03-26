@@ -128,7 +128,11 @@ void qhookerMain::SerialInit()
 void qhookerMain::GameSearching(QString input)
 {
     // Split the output in case of connecting mid-way.
+#ifdef Q_OS_WIN
+    buffer = input.split("\\r", Qt::SkipEmptyParts);
+#else
     buffer = input.split('\r', Qt::SkipEmptyParts);
+#endif // Q_OS_WIN
     //qDebug() << buffer;
     while(!buffer.isEmpty()) {
         buffer[0] = buffer[0].trimmed();
