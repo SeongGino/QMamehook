@@ -45,6 +45,10 @@ public:
 
     bool verbosity = false;
 
+    bool customPathSet = false;
+
+    QString customPath;
+
     void quit();
 
 signals:
