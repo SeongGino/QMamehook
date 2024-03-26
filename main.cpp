@@ -25,9 +25,9 @@ int main(int argc, char *argv[])
             if(arguments.length() > 1) {
                 mainApp.customPath = QDir::fromNativeSeparators(arguments[arguments.indexOf("-p")+1]);
                 #ifdef Q_OS_WIN
-                if(mainApp.customPath.contains(":\\")) {
+                if(mainApp.customPath.contains(':')) {
                 #else
-                if(mainApp.customPath.contains("/")) {
+                if(mainApp.customPath.contains('/')) {
                 #endif // Q_OS_WIN
                     mainApp.customPathSet = true;
                     #ifdef Q_OS_WIN
