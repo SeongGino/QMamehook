@@ -24,21 +24,17 @@ int main(int argc, char *argv[])
         if(arguments.contains("-p")) {
             if(arguments.length() > 1) {
                 mainApp.customPath = QDir::fromNativeSeparators(arguments[arguments.indexOf("-p")+1]);
+                // QDir::fromNativeSeparators uses forwardslashes on both OSes, thank Parace
                 #ifdef Q_OS_WIN
-                if(mainApp.customPath.contains(':')) {
+                // closest way to check for drive letter, since colons aren't allowed in Windows filenames anyways
+                if(mainApp.customPath.contains(":/")) {
                 #else
                 if(mainApp.customPath.contains('/')) {
                 #endif // Q_OS_WIN
                     mainApp.customPathSet = true;
-                    #ifdef Q_OS_WIN
-                    if(!mainApp.customPath.endsWith('\\')) {
-                        mainApp.customPath.append('\\');
-                    }
-                    #else
                     if(!mainApp.customPath.endsWith('/')) {
                         mainApp.customPath.append('/');
                     }
-                    #endif // Q_OS_WIN
                     qInfo() << "Setting search path to" << mainApp.customPath;
                     arguments.removeAt(arguments.indexOf("-p")+1);
                 } else {
