@@ -28,6 +28,8 @@ Because I wasn't happy with the other (or lacking thereof) solutions available, 
 
 > [!TIP]
 > Running `QMamehook -v` will enable verbose output, which prints the exact output stream being received from the server app! Use this to e.g. see what MAME is sending out.
+>
+> Also, running `QMamehook -p "/path/to/directory"` will override the default ini search path with whatever's passed through after the `-p` argument; useful, in case your environment or preference desires a different directory.
 ### For Linux:
 ##### Requirements: Anything with QT5 support.
  - Arch Linux: Install `qmamehook` [from the AUR.](https://aur.archlinux.org/packages/qmamehook)
@@ -44,6 +46,14 @@ Game config files are searched in `~/.config/QMamehook/ini`, and the program out
  - Launch `QMamehook.exe`
 
 Game config files are searched in `%LOCALAPPDATA%/QMamehook/QMamehook/ini` (yes, that's TWO QMamehook folders, oops), and the program output will indicate whether a correct file matching the `mame_start` message is found or not.
+
+#### Known Issues:
+
+**Q: QMamehook worked once, but when I tried opening it again my guns aren't being detected!**
+
+Unfortunately, QMamehook's exit signal isn't properly hooked up yet, so it doesn't do any cleanup and "eject" any detected serial devices that may have been open at that moment like it should. For now, QMamehook must be closed *while no game/config is open* - alternatively, this can be resolved by simply unplugging and re-plugging the gun controller back into your computer. Since this shouldn't happen under normal expected use (outside of quick testing), that's why it's a low priority issue at the moment.
+
+The reason this happens is because of how QT handles Signals & Slots - or rather, how it *doesn't* handle them for QCoreApplications (i.e. console apps). QMamehook's codebase was established under the assumption that signals would be used as the basis for reading network inputs, but this approach was deemed to be flawed and the method was switched to manual polling/exhausting the TCP buffer until it's empty ([2b5236d](https://github.com/SeongGino/QMamehook/commit/2b5236d3f655f66d161d95ca1505faec8470b89e)). Therefore, there's no real reason to use the bodged-together program template anymore that's currently in use. I'll move everything back to `main.cpp` at some point in the future, which by then should allow me to do proper cleanup and therefore resolve this issue.
 
 ## Building:
 #### Requires `qt-base` & `qt-serialport` (QT5/QT6)
