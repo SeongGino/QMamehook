@@ -51,8 +51,10 @@ void qhookerMain::run()
                     tcpSocket.abort();
                     if(!gameName.isEmpty()) {
                         gameName.clear();
-                        delete settings;
-                        settingsMap.clear();
+                        if(settings) {
+                            delete settings;
+                            settingsMap.clear();
+                        }
                     }
                     // in case we exit without connecting to a game (*coughFLYCASTcough*)
                     for(uint8_t i = 0; i < serialFoundList.count(); i++) {
@@ -135,7 +137,7 @@ void qhookerMain::GameSearching(QString input)
 
         // flycast outputs its start signal with code "game" using a game's full title instead of a mame zip name
         if(buffer[0].startsWith("mame_start =") || buffer[0].startsWith("game =")) {
-            qInfo() << "Detected game name!";
+            qInfo() << "Detected game name:";
             // flycast (standalone) ALSO doesn't disconnect at any point,
             // so we terminate and unload any existing settings if a new gameStart is found while a game is already loaded.
             if(!gameName.isEmpty()) {
@@ -148,55 +150,57 @@ void qhookerMain::GameSearching(QString input)
             gameName = buffer[0].mid(input.indexOf('=')+2).trimmed();
             qInfo() << gameName;
 
-            if(customPathSet) {
-                LoadConfig(customPath + gameName + ".ini");
-            } else {
+            if(gameName != "___empty") {
+                if(customPathSet) {
+                    LoadConfig(customPath + gameName + ".ini");
+                } else {
                 // TODO: there might be a better path for this? Trying to prevent "../QMamehook/QMamehook/ini" on Windows here.
                 #ifdef Q_OS_WIN
-                LoadConfig(QString(QStandardPaths::writableLocation(QStandardPaths::ConfigLocation) + "/ini/" + gameName + ".ini"));
+                    LoadConfig(QString(QStandardPaths::writableLocation(QStandardPaths::ConfigLocation) + "/ini/" + gameName + ".ini"));
                 #else
-                LoadConfig(QString(QStandardPaths::writableLocation(QStandardPaths::ConfigLocation) + "/QMamehook/ini/" + gameName + ".ini"));
+                    LoadConfig(QString(QStandardPaths::writableLocation(QStandardPaths::ConfigLocation) + "/QMamehook/ini/" + gameName + ".ini"));
                 #endif
-            }
-
-            if(settings->contains("MameStart")) {
-                //qInfo() << "Detected start statement:";
-                QStringList tempBuffer = settings->value("MameStart").toStringList();
-                //qInfo() << tempBuffer;
-                while(!tempBuffer.isEmpty()) {
-                    if(tempBuffer[0].contains("cmo")) {
-                        // open serial port at number (index(4))
-                        uint8_t portNum = tempBuffer[0].at(4).digitValue()-1;
-                        if(portNum >= 0 && portNum < serialFoundList.count()) {
-                            if(!serialPort[portNum].isOpen()) {
-                                serialPort[portNum].open(QIODevice::WriteOnly);
-                                // Just in case Wendies complains:
-                                serialPort[portNum].setDataTerminalReady(true);
-                                qInfo() << "Opened port no" << portNum+1;
-                            } else {
-                                qWarning() << "Waaaaait a second... Port" << portNum+1 << "is already open!";
-                            }
-                        }
-                    } else if(tempBuffer[0].contains("cmw")) {
-                        uint8_t portNum = tempBuffer[0].at(4).digitValue()-1;
-                        if(portNum >= 0 && portNum < serialFoundList.count()) {
-                            if(serialPort[portNum].isOpen()) {
-                                serialPort[portNum].write(tempBuffer[0].mid(6).toLocal8Bit());
-                                if(!serialPort[portNum].waitForBytesWritten(2000)) {
-                                    qWarning() << "Wrote to port no" << portNum+1 << ", but wasn't sent in time apparently!?";
-                                }
-                            } else {
-                                qWarning() << "Requested to write to port no" << portNum+1 << ", but it's not even open yet!";
-                            }
-                        }
-                    }
-                    tempBuffer.removeFirst();
                 }
+
+                if(settings->contains("MameStart")) {
+                    //qInfo() << "Detected start statement:";
+                    QStringList tempBuffer = settings->value("MameStart").toStringList();
+                    //qInfo() << tempBuffer;
+                    while(!tempBuffer.isEmpty()) {
+                        if(tempBuffer[0].contains("cmo")) {
+                            // open serial port at number (index(4))
+                            uint8_t portNum = tempBuffer[0].at(4).digitValue()-1;
+                            if(portNum >= 0 && portNum < serialFoundList.count()) {
+                                if(!serialPort[portNum].isOpen()) {
+                                    serialPort[portNum].open(QIODevice::WriteOnly);
+                                    // Just in case Wendies complains:
+                                    serialPort[portNum].setDataTerminalReady(true);
+                                    qInfo() << "Opened port no" << portNum+1;
+                                } else {
+                                    qWarning() << "Waaaaait a second... Port" << portNum+1 << "is already open!";
+                                }
+                            }
+                        } else if(tempBuffer[0].contains("cmw")) {
+                            uint8_t portNum = tempBuffer[0].at(4).digitValue()-1;
+                            if(portNum >= 0 && portNum < serialFoundList.count()) {
+                                if(serialPort[portNum].isOpen()) {
+                                    serialPort[portNum].write(tempBuffer[0].mid(6).toLocal8Bit());
+                                    if(!serialPort[portNum].waitForBytesWritten(2000)) {
+                                        qWarning() << "Wrote to port no" << portNum+1 << ", but wasn't sent in time apparently!?";
+                                    }
+                                } else {
+                                    qWarning() << "Requested to write to port no" << portNum+1 << ", but it's not even open yet!";
+                                }
+                            }
+                        }
+                        tempBuffer.removeFirst();
+                    }
+                }
+            } else {
+                gameName.clear();
             }
-            buffer.clear();
-        } else {
-            buffer.removeFirst();
         }
+        buffer.removeFirst();
     }
 }
 
