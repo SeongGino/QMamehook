@@ -127,7 +127,7 @@ void qhookerMain::SerialInit()
 }
 
 
-void qhookerMain::GameSearching(QString input)
+bool qhookerMain::GameSearching(QString input)
 {
     // Split the output in case of connecting mid-way.
     buffer = input.split('\r', Qt::SkipEmptyParts);
@@ -196,18 +196,23 @@ void qhookerMain::GameSearching(QString input)
                         tempBuffer.removeFirst();
                     }
                 }
+                buffer.removeFirst();
+                return true;
             } else {
                 gameName.clear();
             }
         }
         buffer.removeFirst();
     }
+    return false;
 }
 
 
 void qhookerMain::GameStarted(QString input)
 {
-    buffer = input.split('\r', Qt::SkipEmptyParts);
+    if(buffer.isEmpty()) {
+        buffer = input.split('\r', Qt::SkipEmptyParts);
+    }
     while(!buffer.isEmpty()) {
         buffer[0] = buffer[0].trimmed();
 
@@ -343,7 +348,10 @@ void qhookerMain::ReadyRead()
 {
     buffer.clear();
     if(gameName.isEmpty()) {
-        GameSearching(tcpSocket.readLine());
+        // if this returns early as true, then zip straight into the GameStarted function with the remaining buffer.
+        if(GameSearching(tcpSocket.readLine())) {
+            GameStarted("");
+        }
     } else {
         GameStarted(tcpSocket.readLine());
     }

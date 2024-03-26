@@ -34,7 +34,7 @@ private:
 
     void SerialInit();
 
-    void GameSearching(QString input);
+    bool GameSearching(QString input);
 
     void GameStarted(QString input);
 
