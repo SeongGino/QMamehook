@@ -8,7 +8,7 @@ A bare-bones implementation of a MAME network output client, made primarily for 
  - Cross-platform: i.e, works natively on Linux for native emulators, and the same code runs just as well on Windows.
  - Modern: Built on C++ & QT5/6, and made to interface with the MAME network output *standard*, meaning implicit support e.g. for RetroArch cores that use TCP localhost:8000 for feeding force feedback events.
  - Small & Simple: runs in the background with a single command, no admin privileges necessary.
- - Designed for light guns: Made for and exclusively compatible with the serial port interface used by PC light gun systems (which currently is [IR-GUN4ALL](https://github.com/SeongGino/ir-light-gun-plus) and [GUN4IR](https://forum.arcadecontrols.com/index.php/topic,161189.0.html)).
+ - Designed for light guns: Made for and exclusively compatible with the serial port interface used by PC light gun systems (which currently are [IR-GUN4ALL](https://github.com/SeongGino/ir-light-gun-plus), [GUN4IR](https://forum.arcadecontrols.com/index.php/topic,161189.0.html), and the [Blamcon](https://blamcon.com/) systems).
  - Compatible with MAMEHOOKER configs: Uses the same *.ini* files verbatim, no changes needed!
 
 ### Why would you NOT use this over MAMEHOOKER?
