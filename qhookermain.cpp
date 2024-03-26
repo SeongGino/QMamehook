@@ -129,7 +129,18 @@ void qhookerMain::GameSearching(QString input)
 {
     // Split the output in case of connecting mid-way.
 #ifdef Q_OS_WIN
+    // Wendies wants to be a special boy and NOT READ CARRIAGE RETURNS MID-SESSION
     buffer = input.split(QRegExp("[\r\n]"), Qt::SkipEmptyParts);
+    if(verbosity) {
+        qInfo() << "Input:";
+        qInfo() << input;
+        qInfo() << "Converted into the buffer as:";
+        qInfo() << buffer;
+        qInfo() << " - and then split as:";
+        for(uint8_t i = 0; i < input.length(); i++) {
+            qInfo() << buffer[i];
+        }
+    }
 #else
     buffer = input.split('\r', Qt::SkipEmptyParts);
 #endif // Q_OS_WIN
