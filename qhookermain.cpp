@@ -127,8 +127,10 @@ void qhookerMain::SerialInit()
 
 bool qhookerMain::GameSearching(QString input)
 {
-    // Split the output in case of connecting mid-way.
-    buffer = input.split('\r', Qt::SkipEmptyParts);
+    if(buffer.isEmpty()) {
+        // Split the output in case of connecting mid-way.
+        buffer = input.split('\r', Qt::SkipEmptyParts);
+    }
     //qDebug() << buffer;
     while(!buffer.isEmpty()) {
         buffer[0] = buffer[0].trimmed();
@@ -206,7 +208,7 @@ bool qhookerMain::GameSearching(QString input)
 }
 
 
-void qhookerMain::GameStarted(QString input)
+bool qhookerMain::GameStarted(QString input)
 {
     if(buffer.isEmpty()) {
         buffer = input.split('\r', Qt::SkipEmptyParts);
@@ -222,23 +224,27 @@ void qhookerMain::GameStarted(QString input)
 
         // purge the current game name if stop signal is sent
         if(func == "mame_stop") {
+            qInfo() << "mame_stop signal received, disconnecting.";
             if(!gameName.isEmpty()) {
                 gameName.clear();
-                delete settings;
-                settingsMap.clear();
-                qInfo() << "mame_stop signal received, disconnecting.";
-                for(uint8_t i = 0; i < serialFoundList.count(); i++) {
-                    if(serialPort[i].isOpen()) {
-                        serialPort[i].write("E");
-                        if(serialPort[i].waitForBytesWritten(2000)) {
-                            qInfo() << "Closed port" << i+1;
-                            serialPort[i].close();
-                        } else {
-                            qInfo() << "Sent close signal to port" << i+1 << ", but wasn't sent in time apparently!?";
+                if(settings) {
+                    delete settings;
+                    settingsMap.clear();
+                    for(uint8_t i = 0; i < serialFoundList.count(); i++) {
+                        if(serialPort[i].isOpen()) {
+                            serialPort[i].write("E");
+                            if(serialPort[i].waitForBytesWritten(2000)) {
+                                qInfo() << "Closed port" << i+1;
+                                serialPort[i].close();
+                            } else {
+                                qInfo() << "Sent close signal to port" << i+1 << ", but wasn't sent in time apparently!?";
+                            }
                         }
                     }
                 }
             }
+            buffer.clear();
+            return true;
         // checking if a command for this input channel exists
         } else if(!settingsMap[func].isEmpty()) {
             //qDebug() << "Hey, this one isn't empty!"; // testing
@@ -339,6 +345,7 @@ void qhookerMain::GameStarted(QString input)
         // then finally:
         buffer.removeFirst();
     }
+    return false;
 }
 
 
@@ -351,7 +358,9 @@ void qhookerMain::ReadyRead()
             GameStarted("");
         }
     } else {
-        GameStarted(tcpSocket.readLine());
+        if(GameStarted(tcpSocket.readLine())) {
+            GameSearching("");
+        }
     }
 }
 

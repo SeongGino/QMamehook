@@ -36,7 +36,7 @@ private:
 
     bool GameSearching(QString input);
 
-    void GameStarted(QString input);
+    bool GameStarted(QString input);
 
     void ReadyRead();
 
