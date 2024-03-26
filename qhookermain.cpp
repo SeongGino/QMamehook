@@ -103,7 +103,8 @@ void qhookerMain::SerialInit()
         for(int i = serialFoundList.length() - 1; i >= 0; --i) {
             // Detect GUN4ALL and GUN4IR guns (are we the only ones that support this?)
             if(serialFoundList[i].vendorIdentifier() == 2336 ||
-               serialFoundList[i].vendorIdentifier() == 9025) {
+               serialFoundList[i].vendorIdentifier() == 9025 || 
+               serialFoundList[i].vendorIdentifier() == 13939) {
                 qInfo() << "Found device @" << serialFoundList[i].systemLocation();
             } else {
                 //qDebug() << "Deleting dummy device" << serialFoundList[i].systemLocation();
