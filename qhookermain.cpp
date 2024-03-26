@@ -128,31 +128,16 @@ void qhookerMain::SerialInit()
 void qhookerMain::GameSearching(QString input)
 {
     // Split the output in case of connecting mid-way.
-#ifdef Q_OS_WIN
-    // Wendies wants to be a special boy and NOT READ CARRIAGE RETURNS MID-SESSION
-    buffer = input.split(QRegExp("[\r\n]"), Qt::SkipEmptyParts);
-    if(verbosity) {
-        qInfo() << "Input:";
-        qInfo() << input;
-        qInfo() << "Converted into the buffer as:";
-        qInfo() << buffer;
-        qInfo() << " - and then split as:";
-        for(uint8_t i = 0; i < input.length(); i++) {
-            qInfo() << buffer[i];
-        }
-    }
-#else
     buffer = input.split('\r', Qt::SkipEmptyParts);
-#endif // Q_OS_WIN
     //qDebug() << buffer;
     while(!buffer.isEmpty()) {
         buffer[0] = buffer[0].trimmed();
 
         // flycast outputs its start signal with code "game" using a game's full title instead of a mame zip name
-        if(buffer[0].startsWith("mame_start =") || input.startsWith("game =")) {
+        if(buffer[0].startsWith("mame_start =") || buffer[0].startsWith("game =")) {
             qInfo() << "Detected game name!";
-            input.remove(" ");
-            input = input.trimmed();
+            buffer[0].remove(" ");
+            buffer[0] = buffer[0].trimmed();
             // flycast (standalone) ALSO doesn't disconnect at any point,
             // so we terminate and unload any existing settings if a new gameStart is found while a game is already loaded.
             if(!gameName.isEmpty()) {
@@ -162,7 +147,7 @@ void qhookerMain::GameSearching(QString input)
                     settingsMap.clear();
                 }
             }
-            gameName = input.remove(0, input.indexOf("=")+1);
+            gameName = buffer[0].remove(0, input.indexOf("="));
             qInfo() << gameName;
 
             if(customPathSet) {
