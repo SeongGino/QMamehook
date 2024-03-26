@@ -73,8 +73,6 @@ void qhookerMain::run()
             break;
         }
     }
-    // required to exit.
-    quit();
 }
 
 
