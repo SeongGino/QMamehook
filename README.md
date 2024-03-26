@@ -1,3 +1,4 @@
+###### If you enjoy or if my work's helped you in any way,
 [![ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/Z8Z5NNXWL)
 # QMamehook
 ###### "We have MAMEHOOKER at home." 
