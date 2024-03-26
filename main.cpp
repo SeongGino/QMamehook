@@ -23,23 +23,17 @@ int main(int argc, char *argv[])
         }
         if(arguments.contains("-p")) {
             if(arguments.length() > 1) {
-                mainApp.customPath = QDir::fromNativeSeparators(arguments[arguments.indexOf("-p")+1]);
                 // QDir::fromNativeSeparators uses forwardslashes on both OSes, thank Parace
-                #ifdef Q_OS_WIN
-                // closest way to check for drive letter, since colons aren't allowed in Windows filenames anyways
-                if(mainApp.customPath.contains(":/")) {
-                #else
-                if(mainApp.customPath.contains('/')) {
-                #endif // Q_OS_WIN
-                    mainApp.customPathSet = true;
-                    if(!mainApp.customPath.endsWith('/')) {
-                        mainApp.customPath.append('/');
-                    }
-                    qInfo() << "Setting search path to" << mainApp.customPath;
-                    arguments.removeAt(arguments.indexOf("-p")+1);
-                } else {
-                qWarning() << "Bad custom path specified (must be an absolute path)! Disregarding.";
-            }
+                mainApp.customPath = QDir::fromNativeSeparators(arguments[arguments.indexOf("-p")+1]);
+                mainApp.customPathSet = true;
+                if(QDir::isRelativePath(mainApp.customPath)) {
+                    mainApp.customPath.prepend(QDir::currentPath() + '/');
+                }
+                if(!mainApp.customPath.endsWith('/')) {
+                    mainApp.customPath.append('/');
+                }
+                qInfo() << "Setting search path to" << mainApp.customPath;
+                arguments.removeAt(arguments.indexOf("-p")+1);
             } else {
                 qWarning() << "Detected custom path flag without any path specified! Disregarding.";
             }
