@@ -136,8 +136,6 @@ void qhookerMain::GameSearching(QString input)
         // flycast outputs its start signal with code "game" using a game's full title instead of a mame zip name
         if(buffer[0].startsWith("mame_start =") || buffer[0].startsWith("game =")) {
             qInfo() << "Detected game name!";
-            buffer[0].remove(" ");
-            buffer[0] = buffer[0].trimmed();
             // flycast (standalone) ALSO doesn't disconnect at any point,
             // so we terminate and unload any existing settings if a new gameStart is found while a game is already loaded.
             if(!gameName.isEmpty()) {
@@ -147,7 +145,7 @@ void qhookerMain::GameSearching(QString input)
                     settingsMap.clear();
                 }
             }
-            gameName = buffer[0].remove(0, input.indexOf("="));
+            gameName = buffer[0].mid(input.indexOf('=')+1).trimmed();
             qInfo() << gameName;
 
             if(customPathSet) {
