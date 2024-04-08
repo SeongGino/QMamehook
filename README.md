@@ -46,7 +46,7 @@ Game config files are searched in `~/.config/QMamehook/ini`, and the program out
  - Extract the `QMamehook` folder to somewhere you can easily access - `QMamehook.exe` should be right beside `QT5Core.dll`, `QT5Network.dll`, and `QT5SerialPort.dll`.
  - Launch `QMamehook.exe`
 
-Game config files are searched in `%LOCALAPPDATA%/QMamehook/QMamehook/ini` (yes, that's TWO QMamehook folders, oops), and the program output will indicate whether a correct file matching the `mame_start` message is found or not.
+Game config files are searched in `%LOCALAPPDATA%/QMamehook/ini`, and the program output will indicate whether a correct file matching the `mame_start` message is found or not.
 
 #### Known Issues:
 
