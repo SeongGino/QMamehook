@@ -65,7 +65,7 @@ The reason this happens is because of how QT handles Signals & Slots - or rather
  - Setup build directory:
   ```
   cd QMamehook
-  mkdir build && mkdir build
+  mkdir build && cd build
   cmake .. -DCMAKE_BUILD_TYPE=Release
   ```
  - Make:
