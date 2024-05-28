@@ -300,7 +300,7 @@ bool qhookerMain::GameStarted(QString input)
                         if(portNum >= 0 && portNum < serialFoundList.count()) {
                             // if contains %s%, s needs to be replaced by state.
                             if(action[i].contains("%s%")) {
-                                action[i] = action[i].replace("%s%", "%1").arg(buffer[0].rightRef(2).toInt());
+                                action[i] = action[i].replace("%s%", "%1").arg(buffer[0].mid(buffer[0].indexOf('=')+2).toInt());
                             }
                             serialPort[portNum].write(action[i].mid(action[i].indexOf("cmw")+6).toLocal8Bit());
                             if(!serialPort[portNum].waitForBytesWritten(2000)) {
