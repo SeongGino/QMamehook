@@ -101,10 +101,10 @@ void qhookerMain::SerialInit()
     } else {
         // Yeah, sue me, we reading this backwards to make stack management easier.
         for(int i = serialFoundList.length() - 1; i >= 0; --i) {
-            // Detect GUN4ALL and GUN4IR guns (are we the only ones that support this?)
-            if(serialFoundList[i].vendorIdentifier() == 2336 ||
-               serialFoundList[i].vendorIdentifier() == 9025 ||
-               serialFoundList[i].vendorIdentifier() == 13939) {
+            // Detect OpenFIRE, GUN4IR, and Blamcon(?) guns (are we the only ones that support this?)
+            if(serialFoundList[i].vendorIdentifier() == 9025 ||   // JB
+               serialFoundList[i].vendorIdentifier() == 13939 ||  // Props3D
+               serialFoundList[i].vendorIdentifier() == 0xF143) { // OpenFIRE
                 qInfo() << "Found device @" << serialFoundList[i].systemLocation();
             } else {
                 //qDebug() << "Deleting dummy device" << serialFoundList[i].systemLocation();
