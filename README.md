@@ -9,7 +9,7 @@ A bare-bones implementation of a MAME network output client, made primarily for 
  - Cross-platform: i.e, works natively on Linux for native emulators, and the same code runs just as well on Windows.
  - Modern: Built on C++ & QT5/6, and made to interface with the MAME network output *standard*, meaning implicit support e.g. for RetroArch cores that use TCP localhost:8000 for feeding force feedback events.
  - Small & Simple: runs in the background with a single command, no admin privileges necessary.
- - Designed for light guns: Made for and exclusively compatible with the serial port interface used by PC light gun systems (which currently are [IR-GUN4ALL](https://github.com/SeongGino/ir-light-gun-plus), [GUN4IR](https://forum.arcadecontrols.com/index.php/topic,161189.0.html), and the [Blamcon](https://blamcon.com/) systems).
+ - Designed for light guns: Made for and exclusively compatible with the serial port interface used by PC light gun systems (which currently are [OpenFIRE](https://github.com/TeamOpenFIRE/OpenFIRE-Firmware), [GUN4IR](https://forum.arcadecontrols.com/index.php/topic,161189.0.html), and the [Blamcon](https://blamcon.com/) systems).
  - Compatible with MAMEHOOKER configs: Uses the same *.ini* files verbatim, no changes needed!
 
 ### Why would you NOT use this over MAMEHOOKER?
@@ -20,6 +20,15 @@ A bare-bones implementation of a MAME network output client, made primarily for 
 
 ### But y tho?
 Because I wasn't happy with the other (or lacking thereof) solutions available, none of which supported simple serial devices for my lightguns, and I got very impatient and whipped this up in a day while working on GUN4ALL-GUI.
+
+### Okay, but what can I use this with?
+Only programs with *network outputs support* (event packets sent over TCP @ localhost:8000) can be used with QMamehook. This includes:
+ - **MAME, both Standalone and RetroArch(*):** `mame.ini` needs to have the setting `output network`, which can be found beneath the `#OSD OUTPUT OPTIONS` section.
+   - For the RetroArch *MAME - Current* core, make sure that *System/Read Configuration* is **enabled**, and *System/MAME INI Paths* is **disabled**. Then, simply download and transfer [this file](https://gist.githubusercontent.com/SeongGino/ae60206d7a6ae3704f8d416c21221d0a/raw/5a33cbf57364e17a6ed81b746edbf99c4cd8404e/mame.ini) to `$RETROARCHDIR/system/mame/ini/`.
+ - **Flycast, Standalone (either native outputs, or w/ DemulShooter on the Windows binary)**
+   - The Flycast Libretro core (RetroArch) has a "Broadcast Digital Outputs" option that [doesn't currently work](https://github.com/libretro/flycast/issues/1189) as of time of writing.
+ - **Standalone games integration with DemulShooter (Taito Type X, Sega Ring, etc.):** In `DemulShooter_GUI.exe`, under the *Outputs* section, turn on *Enable Outputs* and select *Network Outputs*.
+   - For Linux users, DemulShooter *can* be used as an outputs server with the native Linux *QMamehook* binary, but **only** for the Windows titles run in Wine that it supports, running in the same prefix (i.e. DemulShooter and the game intended to be hooked into need to be running on the same Wine version **and** same Wine Prefix) - ergo, this will ***not*** provide outputs for Native Linux apps or emulators.
 
 ## Running:
 > [!NOTE]
