@@ -32,7 +32,7 @@ Only programs with *network outputs support* (event packets sent over TCP @ loca
 
 ## Running:
 > [!NOTE]
-> Serial devices **must** be plugged in at runtime in order to work! QMamehook will emit a warning message if no compatible devices are detected. Currently, only devices bearing the GUN4ALL or GUN4IR vendor IDs will be detected.
+> Serial devices **must** be plugged in at runtime in order to work! QMamehook will emit a warning message if no compatible devices are detected. Currently, only devices bearing the OpenFIRE, GUN4IR. or Blamcon vendor IDs will be detected.
 >
 > Also keep in mind that QMamehook will only correctly work with COM port writes (`cmw`) to ports **correlating to the intended player/slot number** (usually 1-4) - this does not need to match the COM port number in Windows, as the index is based on the count of *verified COM devices detected* (meaning always starting from "1"), not their ports.
 
@@ -41,7 +41,7 @@ Only programs with *network outputs support* (event packets sent over TCP @ loca
 >
 > Also, running `QMamehook -p "/path/to/directory"` will override the default ini search path with whatever's passed through after the `-p` argument; useful, in case your environment or preference desires a different directory.
 ### For Linux:
-##### Requirements: Anything with QT5 support.
+##### Requirements: Anything with QT5/6 support.
  - Arch Linux: Install `qmamehook` [from the AUR.](https://aur.archlinux.org/packages/qmamehook)
  - Other distros: Try using the latest release binary (built for Ubuntu 20.04 LTS, but should work for most distros?)
  - Make sure your user is part of the `dialout` group (`# usermod -a -G dialout insertusernamehere`)
