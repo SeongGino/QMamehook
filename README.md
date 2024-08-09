@@ -19,7 +19,7 @@ A bare-bones implementation of a MAME network output client, made primarily for 
  - It's made by an idiot: Seriously, this is the first of two things I ever made for desktop PCs and my first pair of things using QT. *The entire effective codebase is like two pages of a single C++ class.* Contributions are welcome though to improve this!
 
 ### But y tho?
-Because I wasn't happy with the other (or lacking thereof) solutions available, none of which supported simple serial devices for my lightguns, and I got very impatient and whipped this up in a day while working on GUN4ALL-GUI.
+Because I wasn't happy with the other (or lacking thereof) solutions available, none of which supported simple serial devices for my lightguns, and I got very impatient and whipped this up in a day while working on GUN4ALL-GUI & (what would later become) the OpenFIRE App.
 
 ### Okay, but what can I use this with?
 Only programs with *network outputs support* (event packets sent over TCP @ localhost:8000) can be used with QMamehook. This includes:
