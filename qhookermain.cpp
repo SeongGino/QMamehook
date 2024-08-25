@@ -61,7 +61,7 @@ void qhookerMain::run()
                         if(serialPort[i].isOpen()) {
                             serialPort[i].write("E");
                             if(serialPort[i].waitForBytesWritten(2000)) {
-                                qInfo() << "Closed port" << i+1;
+                                qInfo() << "Closed port" << i+1 << QString("(%1)").arg(serialPort[i].portName());
                                 serialPort[i].close();
                             } else {
                                 qInfo() << "Sent close signal to port" << i+1 << ", but wasn't sent in time apparently!?";
@@ -175,7 +175,7 @@ bool qhookerMain::GameSearching(QString input)
                                     serialPort[portNum].open(QIODevice::WriteOnly);
                                     // Just in case Wendies complains:
                                     serialPort[portNum].setDataTerminalReady(true);
-                                    qInfo() << "Opened port no" << portNum+1;
+                                    qInfo() << "Opened port no" << portNum+1 << QString("(%1)").arg(serialPort[portNum].portName());
                                 } else {
                                     qWarning() << "Waaaaait a second... Port" << portNum+1 << "is already open!";
                                 }
