@@ -118,7 +118,7 @@ void qhookerMain::SerialInit()
             serialPort = new QSerialPort[serialFoundList.length()];
             for(uint8_t i = 0; i < serialFoundList.length(); i++) {
                 serialPort[i].setPort(serialFoundList[i]);
-                qInfo() << "Assigning port no." << i+1;
+                qInfo() << "Assigning" << serialFoundList[i].portName() << "to port no." << i+1;
             }
         }
     }
