@@ -95,34 +95,97 @@ void qhookerMain::aboutToQuitApp()
 void qhookerMain::SerialInit()
 {
     serialFoundList = QSerialPortInfo::availablePorts();
-    if(serialFoundList.isEmpty()) {
+    if (serialFoundList.isEmpty()) {
         qWarning() << "No devices found! COM devices need to be found at start time.";
         quit();
-    } else {
-        // Yeah, sue me, we reading this backwards to make stack management easier.
-        for(int i = serialFoundList.length() - 1; i >= 0; --i) {
-            // Detect OpenFIRE, GUN4IR, and Blamcon(?) guns (are we the only ones that support this?)
-            if(serialFoundList[i].vendorIdentifier() == 9025 ||   // JB
-               serialFoundList[i].vendorIdentifier() == 13939 ||  // Props3D
-               serialFoundList[i].vendorIdentifier() == 0xF143) { // OpenFIRE
-                qInfo() << "Found device @" << serialFoundList[i].systemLocation();
-            } else {
-                //qDebug() << "Deleting dummy device" << serialFoundList[i].systemLocation();
-                serialFoundList.removeAt(i);
+    }
+    else {
+        // Print all device information
+        PrintDeviceInfo();
+
+        // Create a list to hold valid devices
+        QList<QSerialPortInfo> validDevices;
+
+        // Filter devices based on Vendor IDs and collect valid devices
+        for (const QSerialPortInfo& info : serialFoundList) {
+            if (info.vendorIdentifier() == 9025 || // JB
+                info.vendorIdentifier() == 13939 || // Props3D
+                info.vendorIdentifier() == 0xF143) { // OpenFIRE
+                qInfo() << "Found device @" << info.systemLocation();
+                validDevices.append(info);
+            }
+            else {
+                qWarning() << "Unknown device found:" << info.portName();
             }
         }
-        if(serialFoundList.isEmpty()) {
+
+        if (validDevices.isEmpty()) {
             qWarning() << "No VALID devices found! COM devices need to be found at start time.";
             quit();
-        } else {
-            serialPort = new QSerialPort[serialFoundList.length()];
-            for(uint8_t i = 0; i < serialFoundList.length(); i++) {
-                serialPort[i].setPort(serialFoundList[i]);
-                qInfo() << "Assigning" << serialFoundList[i].portName() << "to port no." << i+1;
+        }
+        else {
+            // Determine the maximum index needed
+            int maxIndex = -1;
+            foreach(const QSerialPortInfo & info, validDevices) {
+                int index = -1;
+                if (info.vendorIdentifier() == 0xF143) {
+                    int productId = info.productIdentifier();
+                    index = productId - 1; // Subtract 1 for zero-based indexing
+                    if (index > maxIndex) {
+                        maxIndex = index;
+                    }
+                }
+            }
+
+            // Initialize serialPort array with size maxIndex + 1
+            serialPort = new QSerialPort[maxIndex + 1];
+
+            // Keep track of assigned indices to handle duplicates
+            QSet<int> assignedIndices;
+            bool duplicateProductIds = false;
+
+            // Assign devices to serialPort[]
+            foreach(const QSerialPortInfo & info, validDevices) {
+                int index = -1;
+
+                if (info.vendorIdentifier() == 0xF143) {
+                    // For devices with Vendor ID 0xF143, use (Product ID - 1) as index
+                    int productId = info.productIdentifier();
+                    index = productId - 1; // Subtract 1 for zero-based indexing
+
+                    if (assignedIndices.contains(index)) {
+                        duplicateProductIds = true;
+                        qWarning() << "Duplicate Product ID" << productId << "found on device" << info.portName();
+                    }
+                    else {
+                        assignedIndices.insert(index);
+                    }
+                }
+                else {
+                    // For other devices, assign next available index starting from 0
+                    index = 0;
+                    while (assignedIndices.contains(index)) {
+                        index++;
+                    }
+                    assignedIndices.insert(index);
+                }
+
+                if (index >= 0 && index < (maxIndex + 1)) {
+                    serialPort[index].setPort(info);
+                    qInfo() << "Assigning" << info.portName() << "to port no." << index+1;
+                }
+                else {
+                    qWarning() << "Index" << index << "out of bounds";
+                }
+            }
+
+            if (duplicateProductIds) {
+                qWarning() << "OpenFIRE devices with matching identifiers detected. Make sure to assign diferent TinyUSB identifers for each gun in the OpenFIRE App under Gun Settings.";
             }
         }
     }
 }
+
 
 
 bool qhookerMain::GameSearching(QString input)
