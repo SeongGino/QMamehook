@@ -56,6 +56,13 @@ void qhookerMain::run()
                             settingsMap.clear();
                         }
                     }
+
+                    if (closeOnDisconnect) {
+                        qInfo() << "Application closing due to -c argument.";
+                        quit();
+                        return;
+                    }
+
                     // in case we exit without connecting to a game (*coughFLYCASTcough*)
                     for(uint8_t i = 0; i < serialFoundList.count(); i++) {
                         if(serialPort[i].isOpen()) {
@@ -151,7 +158,11 @@ void qhookerMain::SerialInit()
                 if (info.vendorIdentifier() == 0xF143) {
                     // For devices with Vendor ID 0xF143, use (Product ID - 1) as index
                     int productId = info.productIdentifier();
+                    if (productId = 1998){
+                        index = 0;
+                    }else{
                     index = productId - 1; // Subtract 1 for zero-based indexing
+                    }
 
                     if (assignedIndices.contains(index)) {
                         duplicateProductIds = true;
@@ -185,6 +196,8 @@ void qhookerMain::SerialInit()
         }
     }
 }
+
+
 
 
 
@@ -235,6 +248,7 @@ bool qhookerMain::GameSearching(QString input)
                             uint8_t portNum = tempBuffer[0].at(4).digitValue()-1;
                             if(portNum >= 0 && portNum < serialFoundList.count()) {
                                 if(!serialPort[portNum].isOpen()) {
+                                    qWarning() << "Failed to open port" << portNum;
                                     serialPort[portNum].open(QIODevice::WriteOnly);
                                     // Just in case Wendies complains:
                                     serialPort[portNum].setDataTerminalReady(true);
@@ -430,4 +444,16 @@ void qhookerMain::LoadConfig(QString path)
         }
     }
     settings->endGroup();
+}
+
+void qhookerMain::PrintDeviceInfo()
+{
+    QList<QSerialPortInfo> allPorts = QSerialPortInfo::availablePorts();
+    for(const QSerialPortInfo &info : allPorts) {
+        qInfo() << "========================================";
+        qInfo() << "Port Name: " << info.portName();
+        qInfo() << "Vendor Identifier: " << (info.hasVendorIdentifier() ? QString::number(info.vendorIdentifier(), 16) : "N/A");
+        qInfo() << "Product Identifier: " << (info.hasProductIdentifier() ? QString::number(info.productIdentifier(), 16) : "N/A");
+        qInfo() << "========================================";
+    }
 }

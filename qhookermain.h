@@ -34,11 +34,15 @@ private:
 
     void SerialInit();
 
+    void PrintDeviceInfo();
+
     bool GameSearching(QString input);
 
     bool GameStarted(QString input);
 
     void ReadyRead();
+
+    QMap<int, QSerialPort*> serialPortMap;
 
 public:
     explicit qhookerMain(QObject *parent = 0);
@@ -46,6 +50,8 @@ public:
     bool verbosity = false;
 
     bool customPathSet = false;
+
+    bool closeOnDisconnect = false;
 
     QString customPath;
 
