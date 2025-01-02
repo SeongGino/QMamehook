@@ -115,9 +115,10 @@ void qhookerMain::SerialInit()
 
         // Filter devices based on Vendor IDs and collect valid devices
         for (const QSerialPortInfo& info : serialFoundList) {
-            if (info.vendorIdentifier() == 9025 || // JB
+            if (info.vendorIdentifier() == 9025 ||  // JB
                 info.vendorIdentifier() == 13939 || // Props3D
-                info.vendorIdentifier() == 0xF143) { // OpenFIRE
+                info.vendorIdentifier() == 0xF143)  // OpenFIRE
+            {
                 qInfo() << "Found device @" << info.systemLocation();
                 validDevices.append(info);
             }
@@ -131,49 +132,62 @@ void qhookerMain::SerialInit()
             quit();
         }
         else {
-            // Determine the maximum index needed
+
             int maxIndex = -1;
-            foreach(const QSerialPortInfo & info, validDevices) {
+            foreach (const QSerialPortInfo &info, validDevices) {
                 int index = -1;
+
                 if (info.vendorIdentifier() == 0xF143) {
+                    // For OpenFIRE devices, derive index from productId
                     int productId = info.productIdentifier();
-                    index = productId - 1; // Subtract 1 for zero-based indexing
+
+                    if (productId == 0x1998) {
+                        // If default OpenFIRE product ID set to 0
+                        index = 0;
+                    } else {
+                        index = productId - 1;
+                    }
+
                     if (index > maxIndex) {
                         maxIndex = index;
                     }
+                } else {
+                    // For non-OpenFIRE (JB or Props3D),
+                    ++maxIndex;
                 }
             }
 
-            // Initialize serialPort array with size maxIndex + 1
             serialPort = new QSerialPort[maxIndex + 1];
 
-            // Keep track of assigned indices to handle duplicates
+
             QSet<int> assignedIndices;
             bool duplicateProductIds = false;
 
-            // Assign devices to serialPort[]
-            foreach(const QSerialPortInfo & info, validDevices) {
+            foreach (const QSerialPortInfo &info, validDevices) {
                 int index = -1;
 
                 if (info.vendorIdentifier() == 0xF143) {
-                    // For devices with Vendor ID 0xF143, use (Product ID - 1) as index
+                    // OpenFIRE device
                     int productId = info.productIdentifier();
-                    if (productId = 1998){
+
+                    if (productId == 0x1998) {
                         index = 0;
-                    }else{
-                    index = productId - 1; // Subtract 1 for zero-based indexing
+                    } else {
+                        index = productId - 1;
                     }
 
                     if (assignedIndices.contains(index)) {
                         duplicateProductIds = true;
-                        qWarning() << "Duplicate Product ID" << productId << "found on device" << info.portName();
+                        qWarning() << "Duplicate Product ID"
+                                   << productId << "found on device" << info.portName();
                     }
                     else {
                         assignedIndices.insert(index);
                     }
                 }
                 else {
-                    // For other devices, assign next available index starting from 0
+                    // Non-OpenFIRE devices
+                    // Start scanning from 0 until we find a free spot
                     index = 0;
                     while (assignedIndices.contains(index)) {
                         index++;
@@ -181,9 +195,16 @@ void qhookerMain::SerialInit()
                     assignedIndices.insert(index);
                 }
 
+                // Safety check for array bounds
                 if (index >= 0 && index < (maxIndex + 1)) {
                     serialPort[index].setPort(info);
-                    qInfo() << "Assigning" << info.portName() << "to port no." << index+1;
+                    serialPort[index].setBaudRate(QSerialPort::Baud115200);
+                    serialPort[index].setDataBits(QSerialPort::Data8);
+                    serialPort[index].setParity(QSerialPort::NoParity);
+                    serialPort[index].setStopBits(QSerialPort::OneStop);
+                    serialPort[index].setFlowControl(QSerialPort::NoFlowControl);
+                    qInfo() << "Assigning" << info.portName()
+                            << "to port no." << index + 1;
                 }
                 else {
                     qWarning() << "Index" << index << "out of bounds";
@@ -191,11 +212,14 @@ void qhookerMain::SerialInit()
             }
 
             if (duplicateProductIds) {
-                qWarning() << "OpenFIRE devices with matching identifiers detected. Make sure to assign diferent TinyUSB identifers for each gun in the OpenFIRE App under Gun Settings.";
+                qWarning() << "OpenFIRE devices with matching identifiers detected. "
+                              "Make sure to assign different TinyUSB identifiers for each gun "
+                              "in the OpenFIRE App under Gun Settings.";
             }
         }
     }
 }
+
 
 
 
@@ -248,7 +272,6 @@ bool qhookerMain::GameSearching(QString input)
                             uint8_t portNum = tempBuffer[0].at(4).digitValue()-1;
                             if(portNum >= 0 && portNum < serialFoundList.count()) {
                                 if(!serialPort[portNum].isOpen()) {
-                                    qWarning() << "Failed to open port" << portNum;
                                     serialPort[portNum].open(QIODevice::WriteOnly);
                                     // Just in case Wendies complains:
                                     serialPort[portNum].setDataTerminalReady(true);
@@ -327,7 +350,7 @@ bool qhookerMain::GameStarted(QString input)
             //qDebug() << "Hey, this one isn't empty!"; // testing
             //qDebug() << settingsMap[func]; // testing
             if(settingsMap[func].contains('|')) {
-                if(buffer[0].rightRef(1).toInt()) {
+                if(buffer[0].right(1).toInt()) {
                     // right is for 1. Does not need replacement, but ignore "nul"
                     QStringList action = settingsMap[func].mid(settingsMap[func].indexOf('|')+1).split(',', Qt::SkipEmptyParts);
                     for(uint8_t i = 0; i < action.length(); i++) {
@@ -435,12 +458,15 @@ void qhookerMain::LoadConfig(QString path)
     }
     settings->beginGroup("Output");
     QStringList settingsTemp = settings->childKeys();
-    for(uint8_t i = 0; i < settingsTemp.length(); i++) {
-        // QSettings splits anything with a comma, so we have to stitch the Q-splitted value back together.
-        if(settings->value(settingsTemp[i]).type() == QVariant::StringList) {
-            settingsMap[settingsTemp[i]] = settings->value(settingsTemp[i]).toStringList().join(",");
+    for (uint8_t i = 0; i < settingsTemp.size(); i++) {
+        QVariant val = settings->value(settingsTemp[i]);
+
+        // Check if the metaType matches QStringList
+        if (val.metaType() == QMetaType::fromType<QStringList>()) {
+            // QSettings splits anything with a comma, so we join it back together
+            settingsMap[settingsTemp[i]] = val.toStringList().join(",");
         } else {
-            settingsMap[settingsTemp[i]] = settings->value(settingsTemp[i]).toString();
+            settingsMap[settingsTemp[i]] = val.toString();
         }
     }
     settings->endGroup();
