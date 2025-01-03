@@ -44,7 +44,7 @@ jobs:
       with:
         # Pinning the aqt version is optional; you can remove or adjust as needed
         # aqtversion: '==3.1.*'
-        version: '6.5.2'
+        version: '6.8.1'
         # For Qt6, we typically specify modules instead of archives
         modules: 'qtserialport'
 
