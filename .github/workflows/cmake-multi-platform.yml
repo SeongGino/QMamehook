@@ -44,9 +44,9 @@ jobs:
       with:
         # Pinning the aqt version is optional; you can remove or adjust as needed
         # aqtversion: '==3.1.*'
-        version: '6.8.1'
+        version: '6.5.3'
         # For Qt6, we typically specify modules instead of archives
-        modules: 'QtSerialPort'
+        modules: 'qtserialport'
 
     - name: Configure CMake
       run: >
