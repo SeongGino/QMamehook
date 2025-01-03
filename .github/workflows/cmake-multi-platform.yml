@@ -43,8 +43,8 @@ jobs:
       uses: jurplel/install-qt-action@v3
       with:
         # Pinning the aqt version is optional; you can remove or adjust as needed
-        aqtversion: '==3.1.*'
-        version: '6.5.0'
+        # aqtversion: '==3.1.*'
+        version: '6.5.2'
         # For Qt6, we typically specify modules instead of archives
         modules: 'qtbase qtserialport qtsvg'
 
