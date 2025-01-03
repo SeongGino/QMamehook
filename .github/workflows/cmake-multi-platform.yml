@@ -46,7 +46,7 @@ jobs:
         # aqtversion: '==3.1.*'
         version: '6.5.2'
         # For Qt6, we typically specify modules instead of archives
-        modules: 'QtSerialPort QtSvg'
+        modules: 'QSerialPort'
 
     - name: Configure CMake
       run: >
