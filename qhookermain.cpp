@@ -198,7 +198,7 @@ void qhookerMain::SerialInit()
                 // Safety check for array bounds
                 if (index >= 0 && index < (maxIndex + 1)) {
                     serialPort[index].setPort(info);
-                    serialPort[index].setBaudRate(QSerialPort::Baud115200);
+                    serialPort[index].setBaudRate(QSerialPort::Baud9600);
                     serialPort[index].setDataBits(QSerialPort::Data8);
                     serialPort[index].setParity(QSerialPort::NoParity);
                     serialPort[index].setStopBits(QSerialPort::OneStop);
@@ -212,9 +212,8 @@ void qhookerMain::SerialInit()
             }
 
             if (duplicateProductIds) {
-                qWarning() << "OpenFIRE devices with matching identifiers detected. "
-                              "Make sure to assign different TinyUSB identifiers for each gun "
-                              "in the OpenFIRE App under Gun Settings.";
+                qWarning() << "Matching identifiers detected. "
+                              "Make sure to assign different USB/PID identifiers for each gun ";
             }
         }
     }
@@ -448,7 +447,7 @@ void qhookerMain::LoadConfig(QString path)
         if(!QFile::exists(path) && !path.contains("__empty")) {
             settings->setValue("MameStart", "");
             settings->setValue("MameStop", "");\
-            settings->setValue("StateChange", "");
+                settings->setValue("StateChange", "");
             settings->setValue("OnRotate", "");
             settings->setValue("OnPause", "");
             settings->setValue("KeyStates/RefreshTime", "");
@@ -458,15 +457,12 @@ void qhookerMain::LoadConfig(QString path)
     }
     settings->beginGroup("Output");
     QStringList settingsTemp = settings->childKeys();
-    for (uint8_t i = 0; i < settingsTemp.size(); i++) {
-        QVariant val = settings->value(settingsTemp[i]);
-
-        // Check if the metaType matches QStringList
-        if (val.metaType() == QMetaType::fromType<QStringList>()) {
-            // QSettings splits anything with a comma, so we join it back together
-            settingsMap[settingsTemp[i]] = val.toStringList().join(",");
+    for(uint8_t i = 0; i < settingsTemp.length(); i++) {
+        // QSettings splits anything with a comma, so we have to stitch the Q-splitted value back together.
+        if(settings->value(settingsTemp[i]).type() == QVariant::StringList) {
+            settingsMap[settingsTemp[i]] = settings->value(settingsTemp[i]).toStringList().join(",");
         } else {
-            settingsMap[settingsTemp[i]] = val.toString();
+            settingsMap[settingsTemp[i]] = settings->value(settingsTemp[i]).toString();
         }
     }
     settings->endGroup();
