@@ -28,6 +28,8 @@ private:
 
     QList<QSerialPortInfo> serialFoundList;
 
+    QList<QSerialPortInfo> validDevices;
+
     QHash<QString, QString> settingsMap;
 
     void LoadConfig(QString name);
@@ -40,6 +42,8 @@ private:
 
     void ReadyRead();
 
+    QMap<int, QSerialPort*> serialPortMap;
+
 public:
     explicit qhookerMain(QObject *parent = 0);
 
@@ -47,7 +51,11 @@ public:
 
     bool customPathSet = false;
 
+    bool closeOnDisconnect = false;
+
     QString customPath;
+
+    void PrintDeviceInfo(const QList<QSerialPortInfo> &devices);
 
     void quit();
 

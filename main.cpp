@@ -39,6 +39,11 @@ int main(int argc, char *argv[])
             }
             arguments.removeAt(arguments.indexOf("-p"));
         }
+        if(arguments.contains("-c")) {
+            mainApp.closeOnDisconnect = true;
+            qInfo() << "Close on disconnect enabled!";
+            arguments.removeAt(arguments.indexOf("-c"));
+        }
     }
 
     // connect up the signals

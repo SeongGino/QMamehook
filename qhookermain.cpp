@@ -56,6 +56,13 @@ void qhookerMain::run()
                             settingsMap.clear();
                         }
                     }
+
+                    if (closeOnDisconnect) {
+                        qInfo() << "Application closing due to -c argument.";
+                        quit();
+                        return;
+                    }
+
                     // in case we exit without connecting to a game (*coughFLYCASTcough*)
                     for(uint8_t i = 0; i < serialFoundList.count(); i++) {
                         if(serialPort[i].isOpen()) {
@@ -95,34 +102,127 @@ void qhookerMain::aboutToQuitApp()
 void qhookerMain::SerialInit()
 {
     serialFoundList = QSerialPortInfo::availablePorts();
-    if(serialFoundList.isEmpty()) {
+    if (serialFoundList.isEmpty()) {
         qWarning() << "No devices found! COM devices need to be found at start time.";
         quit();
-    } else {
-        // Yeah, sue me, we reading this backwards to make stack management easier.
-        for(int i = serialFoundList.length() - 1; i >= 0; --i) {
-            // Detect OpenFIRE, GUN4IR, and Blamcon(?) guns (are we the only ones that support this?)
-            if(serialFoundList[i].vendorIdentifier() == 9025 ||   // JB
-               serialFoundList[i].vendorIdentifier() == 13939 ||  // Props3D
-               serialFoundList[i].vendorIdentifier() == 0xF143) { // OpenFIRE
-                qInfo() << "Found device @" << serialFoundList[i].systemLocation();
-            } else {
-                //qDebug() << "Deleting dummy device" << serialFoundList[i].systemLocation();
-                serialFoundList.removeAt(i);
+    }
+    else {
+
+        // Create a list to hold valid devices
+        QList<QSerialPortInfo> validDevices;
+
+        // Filter devices based on Vendor IDs and collect valid devices
+        for (const QSerialPortInfo& info : serialFoundList) {
+            if (info.vendorIdentifier() == 9025 ||  // JB
+                info.vendorIdentifier() == 13939 || // Props3D
+                info.vendorIdentifier() == 0xF143)  // OpenFIRE
+            {
+                // qInfo() << "Found device @" << info.systemLocation();
+                validDevices.append(info);
+            }
+            else {
+                qWarning() << "Unknown device found:" << info.portName();
             }
         }
-        if(serialFoundList.isEmpty()) {
+
+        // Print all device information
+        PrintDeviceInfo(validDevices);
+
+        if (validDevices.isEmpty()) {
             qWarning() << "No VALID devices found! COM devices need to be found at start time.";
             quit();
-        } else {
-            serialPort = new QSerialPort[serialFoundList.length()];
-            for(uint8_t i = 0; i < serialFoundList.length(); i++) {
-                serialPort[i].setPort(serialFoundList[i]);
-                qInfo() << "Assigning" << serialFoundList[i].portName() << "to port no." << i+1;
+        }
+        else {
+
+            int maxIndex = -1;
+            foreach (const QSerialPortInfo &info, validDevices) {
+                int index = -1;
+
+                if (info.vendorIdentifier() == 0xF143) {
+                    // For OpenFIRE devices, derive index from productId
+                    int productId = info.productIdentifier();
+
+                    if (productId == 0x1998) {
+                        // If default OpenFIRE product ID set to 0
+                        index = 0;
+                    } else {
+                        index = productId - 1;
+                    }
+
+                    if (index > maxIndex) {
+                        maxIndex = index;
+                    }
+                } else {
+                    // For non-OpenFIRE (JB or Props3D),
+                    ++maxIndex;
+                }
+            }
+
+            serialPort = new QSerialPort[maxIndex + 1];
+
+
+            QSet<int> assignedIndices;
+            bool duplicateProductIds = false;
+
+            foreach (const QSerialPortInfo &info, validDevices) {
+                int index = -1;
+
+                if (info.vendorIdentifier() == 0xF143) {
+                    // OpenFIRE device
+                    int productId = info.productIdentifier();
+
+                    if (productId == 0x1998) {
+                        index = 0;
+                    } else {
+                        index = productId - 1;
+                    }
+
+                    if (assignedIndices.contains(index)) {
+                        duplicateProductIds = true;
+                        qWarning() << "Duplicate Product ID"
+                                   << productId << "found on device" << info.portName();
+                    }
+                    else {
+                        assignedIndices.insert(index);
+                    }
+                }
+                else {
+                    // Non-OpenFIRE devices
+                    // Start scanning from 0 until we find a free spot
+                    index = 0;
+                    while (assignedIndices.contains(index)) {
+                        index++;
+                    }
+                    assignedIndices.insert(index);
+                }
+
+                // Safety check for array bounds
+                if (index >= 0 && index < (maxIndex + 1)) {
+                    serialPort[index].setPort(info);
+                    serialPort[index].setBaudRate(QSerialPort::Baud9600);
+                    serialPort[index].setDataBits(QSerialPort::Data8);
+                    serialPort[index].setParity(QSerialPort::NoParity);
+                    serialPort[index].setStopBits(QSerialPort::OneStop);
+                    serialPort[index].setFlowControl(QSerialPort::NoFlowControl);
+                    qInfo() << "Assigning" << info.portName()
+                            << "to port no." << index + 1;
+                }
+                else {
+                    qWarning() << "Index" << index << "out of bounds";
+                }
+            }
+
+            if (duplicateProductIds) {
+                qWarning() << "Matching identifiers detected. "
+                              "Make sure to assign different USB/PID identifiers for each gun ";
             }
         }
     }
 }
+
+
+
+
 
 
 bool qhookerMain::GameSearching(QString input)
@@ -250,7 +350,7 @@ bool qhookerMain::GameStarted(QString input)
             //qDebug() << "Hey, this one isn't empty!"; // testing
             //qDebug() << settingsMap[func]; // testing
             if(settingsMap[func].contains('|')) {
-                if(buffer[0].rightRef(1).toInt()) {
+                if(buffer[0].right(1).toInt()) {
                     // right is for 1. Does not need replacement, but ignore "nul"
                     QStringList action = settingsMap[func].mid(settingsMap[func].indexOf('|')+1).split(',', Qt::SkipEmptyParts);
                     for(uint8_t i = 0; i < action.length(); i++) {
@@ -348,7 +448,7 @@ void qhookerMain::LoadConfig(QString path)
         if(!QFile::exists(path) && !path.contains("__empty")) {
             settings->setValue("MameStart", "");
             settings->setValue("MameStop", "");\
-            settings->setValue("StateChange", "");
+                settings->setValue("StateChange", "");
             settings->setValue("OnRotate", "");
             settings->setValue("OnPause", "");
             settings->setValue("KeyStates/RefreshTime", "");
@@ -367,4 +467,19 @@ void qhookerMain::LoadConfig(QString path)
         }
     }
     settings->endGroup();
+}
+
+void qhookerMain::PrintDeviceInfo(const QList<QSerialPortInfo> &devices)
+{
+    for(const QSerialPortInfo &info : devices) {
+        qInfo() << "========================================";
+        qInfo() << "Port Name:" << info.portName();
+        qInfo() << "Vendor Identifier:"
+                << (info.hasVendorIdentifier() ? QString::number(info.vendorIdentifier(), 16)
+                                               : "N/A");
+        qInfo() << "Product Identifier:"
+                << (info.hasProductIdentifier() ? QString::number(info.productIdentifier(), 16)
+                                                : "N/A");
+        qInfo() << "========================================";
+    }
 }
