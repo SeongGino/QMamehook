@@ -105,9 +105,7 @@ void qhookerMain::SerialInit()
     if (serialFoundList.isEmpty()) {
         qWarning() << "No devices found! COM devices need to be found at start time.";
         quit();
-    }
-    else {
-
+    } else {
         // Create a list to hold valid devices
         QList<QSerialPortInfo> validDevices;
 
@@ -119,9 +117,9 @@ void qhookerMain::SerialInit()
             {
                 // qInfo() << "Found device @" << info.systemLocation();
                 validDevices.append(info);
-            }
-            else {
-                qWarning() << "Unknown device found:" << info.portName();
+            } else {
+                if(!info.portName().startsWith("tty"))
+                    qWarning() << "Unknown device found:" << info.portName();
             }
         }
 
@@ -131,9 +129,7 @@ void qhookerMain::SerialInit()
         if (validDevices.isEmpty()) {
             qWarning() << "No VALID devices found! COM devices need to be found at start time.";
             quit();
-        }
-        else {
-
+        } else {
             int maxIndex = -1;
             foreach (const QSerialPortInfo &info, validDevices) {
                 int index = -1;
@@ -142,16 +138,13 @@ void qhookerMain::SerialInit()
                     // For OpenFIRE devices, derive index from productId
                     int productId = info.productIdentifier();
 
-                    if (productId == 0x1998) {
+                    if (productId == 0x1998)
                         // If default OpenFIRE product ID set to 0
                         index = 0;
-                    } else {
-                        index = productId - 1;
-                    }
+                    else index = productId - 1;
 
-                    if (index > maxIndex) {
+                    if (index > maxIndex)
                         maxIndex = index;
-                    }
                 } else {
                     // For non-OpenFIRE (JB or Props3D),
                     ++maxIndex;
@@ -159,7 +152,6 @@ void qhookerMain::SerialInit()
             }
 
             serialPort = new QSerialPort[maxIndex + 1];
-
 
             QSet<int> assignedIndices;
             bool duplicateProductIds = false;
@@ -171,22 +163,16 @@ void qhookerMain::SerialInit()
                     // OpenFIRE device
                     int productId = info.productIdentifier();
 
-                    if (productId == 0x1998) {
+                    if (productId == 0x1998)
                         index = 0;
-                    } else {
-                        index = productId - 1;
-                    }
+                    else index = productId - 1;
 
                     if (assignedIndices.contains(index)) {
                         duplicateProductIds = true;
                         qWarning() << "Duplicate Product ID"
                                    << productId << "found on device" << info.portName();
-                    }
-                    else {
-                        assignedIndices.insert(index);
-                    }
-                }
-                else {
+                    } else assignedIndices.insert(index);
+                } else {
                     // Non-OpenFIRE devices
                     // Start scanning from 0 until we find a free spot
                     index = 0;
@@ -219,10 +205,6 @@ void qhookerMain::SerialInit()
         }
     }
 }
-
-
-
-
 
 
 bool qhookerMain::GameSearching(QString input)
