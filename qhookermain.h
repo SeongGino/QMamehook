@@ -28,13 +28,13 @@ private:
 
     QList<QSerialPortInfo> serialFoundList;
 
+    QList<QSerialPortInfo> validDevices;
+
     QHash<QString, QString> settingsMap;
 
     void LoadConfig(QString name);
 
     void SerialInit();
-
-    void PrintDeviceInfo();
 
     bool GameSearching(QString input);
 
@@ -54,6 +54,8 @@ public:
     bool closeOnDisconnect = false;
 
     QString customPath;
+
+    void PrintDeviceInfo(const QList<QSerialPortInfo> &devices);
 
     void quit();
 
