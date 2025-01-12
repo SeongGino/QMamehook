@@ -107,8 +107,6 @@ void qhookerMain::SerialInit()
         quit();
     }
     else {
-        // Print all device information
-        PrintDeviceInfo();
 
         // Create a list to hold valid devices
         QList<QSerialPortInfo> validDevices;
@@ -119,13 +117,16 @@ void qhookerMain::SerialInit()
                 info.vendorIdentifier() == 13939 || // Props3D
                 info.vendorIdentifier() == 0xF143)  // OpenFIRE
             {
-                qInfo() << "Found device @" << info.systemLocation();
+                // qInfo() << "Found device @" << info.systemLocation();
                 validDevices.append(info);
             }
             else {
                 qWarning() << "Unknown device found:" << info.portName();
             }
         }
+
+        // Print all device information
+        PrintDeviceInfo(validDevices);
 
         if (validDevices.isEmpty()) {
             qWarning() << "No VALID devices found! COM devices need to be found at start time.";
@@ -468,14 +469,17 @@ void qhookerMain::LoadConfig(QString path)
     settings->endGroup();
 }
 
-void qhookerMain::PrintDeviceInfo()
+void qhookerMain::PrintDeviceInfo(const QList<QSerialPortInfo> &devices)
 {
-    QList<QSerialPortInfo> allPorts = QSerialPortInfo::availablePorts();
-    for(const QSerialPortInfo &info : allPorts) {
+    for(const QSerialPortInfo &info : devices) {
         qInfo() << "========================================";
-        qInfo() << "Port Name: " << info.portName();
-        qInfo() << "Vendor Identifier: " << (info.hasVendorIdentifier() ? QString::number(info.vendorIdentifier(), 16) : "N/A");
-        qInfo() << "Product Identifier: " << (info.hasProductIdentifier() ? QString::number(info.productIdentifier(), 16) : "N/A");
+        qInfo() << "Port Name:" << info.portName();
+        qInfo() << "Vendor Identifier:"
+                << (info.hasVendorIdentifier() ? QString::number(info.vendorIdentifier(), 16)
+                                               : "N/A");
+        qInfo() << "Product Identifier:"
+                << (info.hasProductIdentifier() ? QString::number(info.productIdentifier(), 16)
+                                                : "N/A");
         qInfo() << "========================================";
     }
 }
