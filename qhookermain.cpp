@@ -105,8 +105,7 @@ void qhookerMain::SerialInit()
     if (serialFoundList.isEmpty()) {
         qWarning() << "No devices found! COM devices need to be found at start time.";
         quit();
-    }
-    else {
+    } else {
 
         // Create a list to hold valid devices
         QList<QSerialPortInfo> validDevices;
