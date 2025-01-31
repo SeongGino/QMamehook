@@ -151,8 +151,9 @@ void qhookerMain::SerialInit()
                 // Check for duplicates
                 if (assignedPids.contains(pid)) {
                     duplicateProductIds = true;
-                    qWarning() << "Duplicate Product ID" << pid
-                               << "found on device" << info.portName();
+                    qWarning()  << "Duplicate Product ID" 
+                                << "0x" + QString::number(pid, 16).toUpper() 
+                                << "found on device" << info.portName();
                 } else {
                     assignedPids.insert(pid);
                 }
@@ -166,9 +167,12 @@ void qhookerMain::SerialInit()
                 serialPort[i].setStopBits(QSerialPort::OneStop);
                 serialPort[i].setFlowControl(QSerialPort::NoFlowControl);
 
-                qInfo() << "Assigning" << info.portName()
-                        << "with PID" << pid
-                        << "to port no." << (i + 1);
+                qInfo() << "Assigning" 
+                    << info.portName()
+                    << "with PID"
+                    << "0x" + QString::number(pid, 16).toUpper() 
+                    << "to port no."
+                    << (i + 1);
             }
 
             if (duplicateProductIds) {
@@ -436,11 +440,11 @@ void qhookerMain::PrintDeviceInfo(const QList<QSerialPortInfo> &devices)
         qInfo() << "Port Name:" << info.portName();
         qInfo() << "Vendor Identifier:"
                 << (info.hasVendorIdentifier()
-                        ? QString::number(info.vendorIdentifier(), 16)
+                        ?  "0x" + QString::number(info.vendorIdentifier(), 16).toUpper()
                         : "N/A");
         qInfo() << "Product Identifier:"
                 << (info.hasProductIdentifier()
-                        ? QString::number(info.productIdentifier())   // decimal instead of base-16
+                        ?  "0x" + QString::number(info.productIdentifier(), 16).toUpper()
                         : "N/A");
         qInfo() << "========================================";
     }
