@@ -106,20 +106,21 @@ void qhookerMain::SerialInit()
         qWarning() << "No devices found! COM devices need to be found at start time.";
         quit();
     } else {
+
         // Create a list to hold valid devices
         QList<QSerialPortInfo> validDevices;
 
-        // Filter devices based on Vendor IDs and collect valid devices
-        for (const QSerialPortInfo& info : serialFoundList) {
-            if (info.vendorIdentifier() == 9025 ||  // JB
-                info.vendorIdentifier() == 13939 || // Props3D
-                info.vendorIdentifier() == 0xF143)  // OpenFIRE
+        // Filter devices based on Vendor IDs (JB = 9025, Props3D = 13939, OpenFIRE = 0xF143)
+        // But we no longer treat OpenFIRE in a special way – just accept it if it matches vendorId
+        for (const QSerialPortInfo &info : serialFoundList) {
+            if (info.vendorIdentifier() == 9025   // JB
+                || info.vendorIdentifier() == 13939 // Props3D
+                || info.vendorIdentifier() == 0xF143) // OpenFIRE
             {
-                // qInfo() << "Found device @" << info.systemLocation();
                 validDevices.append(info);
             } else {
                 if(!info.portName().startsWith("tty"))
-                    qWarning() << "Unknown device found:" << info.portName();
+                qWarning() << "Unknown device found:" << info.portName();
             }
         }
 
@@ -130,81 +131,63 @@ void qhookerMain::SerialInit()
             qWarning() << "No VALID devices found! COM devices need to be found at start time.";
             quit();
         } else {
-            int maxIndex = -1;
-            foreach (const QSerialPortInfo &info, validDevices) {
-                int index = -1;
+            // Sort valid devices by Product ID ascending
+            std::sort(validDevices.begin(), validDevices.end(),
+                      [](const QSerialPortInfo &a, const QSerialPortInfo &b) {
+                          return a.productIdentifier() < b.productIdentifier();
+                      });
 
-                if (info.vendorIdentifier() == 0xF143) {
-                    // For OpenFIRE devices, derive index from productId
-                    int productId = info.productIdentifier();
+            // Create our array of QSerialPorts, sized to the number of valid devices
+            serialPort = new QSerialPort[validDevices.size()];
 
-                    if (productId == 0x1998)
-                        // If default OpenFIRE product ID set to 0
-                        index = 0;
-                    else index = productId - 1;
-
-                    if (index > maxIndex)
-                        maxIndex = index;
-                } else {
-                    // For non-OpenFIRE (JB or Props3D),
-                    ++maxIndex;
-                }
-            }
-
-            serialPort = new QSerialPort[maxIndex + 1];
-
-            QSet<int> assignedIndices;
+            // Keep track of assigned PIDs and check for duplicates
+            QSet<quint16> assignedPids;
             bool duplicateProductIds = false;
 
-            foreach (const QSerialPortInfo &info, validDevices) {
-                int index = -1;
+            // Assign indices (ports) in sorted order (lowest PID → highest PID)
+            for (int i = 0; i < validDevices.size(); ++i) {
+                const QSerialPortInfo &info = validDevices[i];
+                quint16 pid = info.productIdentifier();
 
-                if (info.vendorIdentifier() == 0xF143) {
-                    // OpenFIRE device
-                    int productId = info.productIdentifier();
-
-                    if (productId == 0x1998)
-                        index = 0;
-                    else index = productId - 1;
-
-                    if (assignedIndices.contains(index)) {
-                        duplicateProductIds = true;
-                        qWarning() << "Duplicate Product ID"
-                                   << productId << "found on device" << info.portName();
-                    } else assignedIndices.insert(index);
+                // Check for duplicates
+                if (assignedPids.contains(pid)) {
+                    duplicateProductIds = true;
+                    qWarning()  << "Duplicate Product ID" 
+                                << "0x" + QString::number(pid, 16).toUpper() 
+                                << "found on device" << info.portName();
                 } else {
-                    // Non-OpenFIRE devices
-                    // Start scanning from 0 until we find a free spot
-                    index = 0;
-                    while (assignedIndices.contains(index)) {
-                        index++;
-                    }
-                    assignedIndices.insert(index);
+                    assignedPids.insert(pid);
                 }
 
-                // Safety check for array bounds
-                if (index >= 0 && index < (maxIndex + 1)) {
-                    serialPort[index].setPort(info);
-                    serialPort[index].setBaudRate(QSerialPort::Baud9600);
-                    serialPort[index].setDataBits(QSerialPort::Data8);
-                    serialPort[index].setParity(QSerialPort::NoParity);
-                    serialPort[index].setStopBits(QSerialPort::OneStop);
-                    serialPort[index].setFlowControl(QSerialPort::NoFlowControl);
-                    qInfo() << "Assigning" << info.portName()
-                            << "to port no." << index + 1;
-                }
-                else {
-                    qWarning() << "Index" << index << "out of bounds";
-                }
+                // Now simply assign i as the index for this device
+                // (port #1 for i=0, port #2 for i=1, etc.)
+                serialPort[i].setPort(info);
+                serialPort[i].setBaudRate(QSerialPort::Baud9600);
+                serialPort[i].setDataBits(QSerialPort::Data8);
+                serialPort[i].setParity(QSerialPort::NoParity);
+                serialPort[i].setStopBits(QSerialPort::OneStop);
+                serialPort[i].setFlowControl(QSerialPort::NoFlowControl);
+
+                qInfo() << "Assigning" 
+                    << info.portName()
+                    << "with PID"
+                    << "0x" + QString::number(pid, 16).toUpper() 
+                    << "to port no."
+                    << (i + 1);
             }
 
             if (duplicateProductIds) {
                 qWarning() << "Matching identifiers detected. "
-                              "Make sure to assign different USB/PID identifiers for each gun ";
+                              "To get consistant port allocations assign different PID identifiers for each gun.";
             }
         }
     }
 }
+
+
+
+
+
 
 
 bool qhookerMain::GameSearching(QString input)
@@ -453,15 +436,17 @@ void qhookerMain::LoadConfig(QString path)
 
 void qhookerMain::PrintDeviceInfo(const QList<QSerialPortInfo> &devices)
 {
-    for(const QSerialPortInfo &info : devices) {
+    for (const QSerialPortInfo &info : devices) {
         qInfo() << "========================================";
         qInfo() << "Port Name:" << info.portName();
         qInfo() << "Vendor Identifier:"
-                << (info.hasVendorIdentifier() ? QString::number(info.vendorIdentifier(), 16)
-                                               : "N/A");
+                << (info.hasVendorIdentifier()
+                        ?  "0x" + QString::number(info.vendorIdentifier(), 16).toUpper()
+                        : "N/A");
         qInfo() << "Product Identifier:"
-                << (info.hasProductIdentifier() ? QString::number(info.productIdentifier(), 16)
-                                                : "N/A");
+                << (info.hasProductIdentifier()
+                        ?  "0x" + QString::number(info.productIdentifier(), 16).toUpper()
+                        : "N/A");
         qInfo() << "========================================";
     }
 }
