@@ -119,6 +119,7 @@ void qhookerMain::SerialInit()
             {
                 validDevices.append(info);
             } else {
+                if(!info.portName().startsWith("tty"))
                 qWarning() << "Unknown device found:" << info.portName();
             }
         }
