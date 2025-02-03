@@ -104,7 +104,7 @@ void qhookerMain::aboutToQuitApp()
 
 void qhookerMain::SerialInit()
 {
-    serialFoundList = QSerialPortInfo::availablePorts();
+    QList<QSerialPortInfo> serialFoundList = QSerialPortInfo::availablePorts();
 
     if (serialFoundList.isEmpty()) {
         printf("No devices found! COM devices need to be found at start time.\n");

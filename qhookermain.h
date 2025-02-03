@@ -26,8 +26,6 @@ private:
 
     QByteArray gameName;
 
-    QList<QSerialPortInfo> serialFoundList;
-
     QList<QSerialPortInfo> validDevices;
 
     QHash<QString, QString> settingsMap;
