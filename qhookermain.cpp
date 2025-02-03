@@ -5,6 +5,8 @@
 #include <QStandardPaths>
 #include <QThread>
 
+// TODO: core app stuff isn't really needed, looks very messy.
+
 qhookerMain::qhookerMain(QObject *parent)
     : QObject{parent}
 {
@@ -20,17 +22,17 @@ void qhookerMain::run()
 
     SerialInit();
 
-    qInfo() << "Waiting for MAME-compatible Network Output @ localhost:8000 ...";
+    printf("Waiting for MAME-compatible Network Output @ localhost:8000 ...\n");
 
     for(;;) {
         switch(tcpSocket.state()) { // oh, bite me QT designer--these two are the only ones I need. :/
         case QAbstractSocket::UnconnectedState:
             tcpSocket.connectToHost("localhost", 8000);
-            if(tcpSocket.waitForConnected(5000)) {
-                qInfo() << "Connected to output server instance!";
-            } else {
-                QThread::sleep(1);
-            }
+
+            if(tcpSocket.waitForConnected(5000))
+                qInfo() << "Connected to output server instance!\n";
+            else QThread::sleep(1);
+
             break;
         case QAbstractSocket::ConnectedState:
             while(tcpSocket.state() == QAbstractSocket::ConnectedState) {
@@ -41,14 +43,15 @@ void qhookerMain::run()
                 #else
                 if(tcpSocket.waitForReadyRead(-1)) {
                 #endif // Q_OS_WIN
-                    while(!tcpSocket.atEnd()) {
+                    while(!tcpSocket.atEnd())
                         ReadyRead();
-                    }
+
                 // Apparently wendies maybe possibly might make false positives here,
                 // so check if the error is actually the host being closed, to at least stop it from ending early.
                 } else if(tcpSocket.error() == QAbstractSocket::RemoteHostClosedError) {
-                    qInfo() << "Server closing, disconnecting...";
+                    printf("Server closing, disconnecting...\n");
                     tcpSocket.abort();
+
                     if(!gameName.isEmpty()) {
                         gameName.clear();
                         if(settings) {
@@ -58,7 +61,7 @@ void qhookerMain::run()
                     }
 
                     if (closeOnDisconnect) {
-                        qInfo() << "Application closing due to -c argument.";
+                        printf("Application closing due to -c argument.\n");
                         quit();
                         return;
                     }
@@ -68,10 +71,10 @@ void qhookerMain::run()
                         if(serialPort[i].isOpen()) {
                             serialPort[i].write("E");
                             if(serialPort[i].waitForBytesWritten(2000)) {
-                                qInfo() << "Closed port" << i+1 << QString("(%1)").arg(serialPort[i].portName());
+                                printf("Closed port %d (%s)\n", i+1, serialPort[i].portName().toLocal8Bit().constData());
                                 serialPort[i].close();
                             } else {
-                                qInfo() << "Sent close signal to port" << i+1 << ", but wasn't sent in time apparently!?";
+                                printf("Sent close signal to port %d, but wasn't sent in time apparently!?\n", i+1);
                             }
                         }
                     }
@@ -102,33 +105,29 @@ void qhookerMain::aboutToQuitApp()
 void qhookerMain::SerialInit()
 {
     serialFoundList = QSerialPortInfo::availablePorts();
+
     if (serialFoundList.isEmpty()) {
-        qWarning() << "No devices found! COM devices need to be found at start time.";
+        printf("No devices found! COM devices need to be found at start time.\n");
         quit();
     } else {
-
         // Create a list to hold valid devices
         QList<QSerialPortInfo> validDevices;
 
         // Filter devices based on Vendor IDs (JB = 9025, Props3D = 13939, OpenFIRE = 0xF143)
-        // But we no longer treat OpenFIRE in a special way – just accept it if it matches vendorId
         for (const QSerialPortInfo &info : serialFoundList) {
-            if (info.vendorIdentifier() == 9025   // JB
-                || info.vendorIdentifier() == 13939 // Props3D
-                || info.vendorIdentifier() == 0xF143) // OpenFIRE
-            {
+            if(info.vendorIdentifier() == 9025  ||  // JB
+               info.vendorIdentifier() == 13939 ||  // Props3D
+               info.vendorIdentifier() == 0xF143)   // OpenFIRE
                 validDevices.append(info);
-            } else {
-                if(!info.portName().startsWith("tty"))
-                qWarning() << "Unknown device found:" << info.portName();
-            }
+            else if(!info.portName().startsWith("ttyS"))
+                printf("Unknown device found: %s\n", info.portName().toLocal8Bit().constData());
         }
 
         // Print all device information
         PrintDeviceInfo(validDevices);
 
         if (validDevices.isEmpty()) {
-            qWarning() << "No VALID devices found! COM devices need to be found at start time.";
+            printf("No VALID devices found! COM devices need to be found at start time.\n");
             quit();
         } else {
             // Sort valid devices by Product ID ascending
@@ -147,17 +146,13 @@ void qhookerMain::SerialInit()
             // Assign indices (ports) in sorted order (lowest PID → highest PID)
             for (int i = 0; i < validDevices.size(); ++i) {
                 const QSerialPortInfo &info = validDevices[i];
-                quint16 pid = info.productIdentifier();
 
                 // Check for duplicates
-                if (assignedPids.contains(pid)) {
-                    duplicateProductIds = true;
-                    qWarning()  << "Duplicate Product ID" 
-                                << "0x" + QString::number(pid, 16).toUpper() 
-                                << "found on device" << info.portName();
-                } else {
-                    assignedPids.insert(pid);
-                }
+                if(assignedPids.contains(info.productIdentifier())) {
+                   duplicateProductIds = true;
+                   printf("Duplicate Product ID %04X found on device %s\n",
+                          info.productIdentifier(), info.portName().toLocal8Bit().constData());
+                } else assignedPids.insert(info.productIdentifier());
 
                 // Now simply assign i as the index for this device
                 // (port #1 for i=0, port #2 for i=1, etc.)
@@ -168,26 +163,17 @@ void qhookerMain::SerialInit()
                 serialPort[i].setStopBits(QSerialPort::OneStop);
                 serialPort[i].setFlowControl(QSerialPort::NoFlowControl);
 
-                qInfo() << "Assigning" 
-                    << info.portName()
-                    << "with PID"
-                    << "0x" + QString::number(pid, 16).toUpper() 
-                    << "to port no."
-                    << (i + 1);
+                printf("Assigning %s with PID %04X to port no. %d\n",
+                       info.portName().toLocal8Bit().constData(), info.productIdentifier(), i+1);
             }
 
             if (duplicateProductIds) {
-                qWarning() << "Matching identifiers detected. "
-                              "To get consistant port allocations assign different PID identifiers for each gun.";
+                printf("Matching identifiers detected.\n"
+                       "To get consistent port allocations, each gun should have differentiating Product IDs.\n");
             }
         }
     }
 }
-
-
-
-
-
 
 
 bool qhookerMain::GameSearching(QString input)
@@ -202,7 +188,8 @@ bool qhookerMain::GameSearching(QString input)
 
         // flycast outputs its start signal with code "game" using a game's full title instead of a mame zip name
         if(buffer[0].startsWith("mame_start =") || buffer[0].startsWith("game =")) {
-            qInfo() << "Detected game name:";
+            printf("Detected game name:");
+
             // flycast (standalone) ALSO doesn't disconnect at any point,
             // so we terminate and unload any existing settings if a new gameStart is found while a game is already loaded.
             if(!gameName.isEmpty()) {
@@ -212,8 +199,9 @@ bool qhookerMain::GameSearching(QString input)
                     settingsMap.clear();
                 }
             }
-            gameName = buffer[0].mid(input.indexOf('=')+2).trimmed();
-            qInfo() << gameName;
+
+            gameName = buffer[0].mid(input.indexOf('=')+2).trimmed().toLocal8Bit();
+            printf("%s\n", gameName.constData());
 
             if(gameName != "___empty") {
                 if(customPathSet) {
@@ -221,9 +209,9 @@ bool qhookerMain::GameSearching(QString input)
                 } else {
                 // TODO: there might be a better path for this? Trying to prevent "../QMamehook/QMamehook/ini" on Windows here.
                 #ifdef Q_OS_WIN
-                    LoadConfig(QString(QStandardPaths::writableLocation(QStandardPaths::ConfigLocation) + "/ini/" + gameName + ".ini"));
+                    LoadConfig(QStandardPaths::writableLocation(QStandardPaths::ConfigLocation) + "/ini/" + gameName + ".ini");
                 #else
-                    LoadConfig(QString(QStandardPaths::writableLocation(QStandardPaths::ConfigLocation) + "/QMamehook/ini/" + gameName + ".ini"));
+                    LoadConfig(QStandardPaths::writableLocation(QStandardPaths::ConfigLocation) + "/QMamehook/ini/" + gameName + ".ini");
                 #endif
                 }
 
@@ -240,9 +228,9 @@ bool qhookerMain::GameSearching(QString input)
                                     serialPort[portNum].open(QIODevice::WriteOnly);
                                     // Just in case Wendies complains:
                                     serialPort[portNum].setDataTerminalReady(true);
-                                    qInfo() << "Opened port no" << portNum+1 << QString("(%1)").arg(serialPort[portNum].portName());
+                                    printf("Opened port no %d (%s)\n", portNum+1, serialPort[portNum].portName().toLocal8Bit().constData());
                                 } else {
-                                    qWarning() << "Waaaaait a second... Port" << portNum+1 << "is already open!";
+                                    printf("Waaaaait a second... Port %d is already open!\n", portNum+1);
                                 }
                             }
                         } else if(tempBuffer[0].contains("cmw")) {
@@ -250,12 +238,9 @@ bool qhookerMain::GameSearching(QString input)
                             if(portNum >= 0 && portNum < serialFoundList.count()) {
                                 if(serialPort[portNum].isOpen()) {
                                     serialPort[portNum].write(tempBuffer[0].mid(6).toLocal8Bit());
-                                    if(!serialPort[portNum].waitForBytesWritten(2000)) {
-                                        qWarning() << "Wrote to port no" << portNum+1 << ", but wasn't sent in time apparently!?";
-                                    }
-                                } else {
-                                    qWarning() << "Requested to write to port no" << portNum+1 << ", but it's not even open yet!";
-                                }
+                                    if(!serialPort[portNum].waitForBytesWritten(2000))
+                                        printf("Wrote to port no. %d, but wasn't sent in time apparently!?\n", portNum+1);
+                                } else  printf("Requested to write to port no. %d, but it's not even open yet!\n", portNum+1);
                             }
                         }
                         tempBuffer.removeFirst();
@@ -275,23 +260,24 @@ bool qhookerMain::GameSearching(QString input)
 
 bool qhookerMain::GameStarted(QString input)
 {
-    if(buffer.isEmpty()) {
+    if(buffer.isEmpty())
         buffer = input.split('\r', Qt::SkipEmptyParts);
-    }
+
     while(!buffer.isEmpty()) {
         buffer[0] = buffer[0].trimmed();
 
-        if(verbosity) {
-            qInfo() << buffer[0];
-        }
+        if(verbosity)
+            printf("%s\n", buffer[0].toLocal8Bit().constData());
 
         QString func = buffer[0].left(buffer[0].indexOf(' '));
 
         // purge the current game name if stop signal is sent
         if(func == "mame_stop") {
-            qInfo() << "mame_stop signal received, disconnecting.";
+            printf("mame_stop signal received, disconnecting.\n");
+
             if(!gameName.isEmpty()) {
                 gameName.clear();
+
                 if(settings) {
                     delete settings;
                     settingsMap.clear();
@@ -299,11 +285,9 @@ bool qhookerMain::GameStarted(QString input)
                         if(serialPort[i].isOpen()) {
                             serialPort[i].write("E");
                             if(serialPort[i].waitForBytesWritten(2000)) {
-                                qInfo() << "Closed port" << i+1;
+                                printf("Closed port %d\n", i+1);
                                 serialPort[i].close();
-                            } else {
-                                qInfo() << "Sent close signal to port" << i+1 << ", but wasn't sent in time apparently!?";
-                            }
+                            } else printf("Sent close signal to port %d, but wasn't sent in time apparently!?\n", i+1);
                         }
                     }
                 }
@@ -324,13 +308,12 @@ bool qhookerMain::GameStarted(QString input)
                             if(portNum >= 0 && portNum < serialFoundList.count()) {
                                 // if contains %s%, s needs to be replaced by state.
                                 // yes, even here, in case of stupid.
-                                if(action[i].contains("%s%")) {
+                                if(action[i].contains("%s%"))
                                     action[i] = action[i].replace("%s%", "%1").arg(1);
-                                }
+
                                 serialPort[portNum].write(action[i].mid(action[i].indexOf("cmw")+6).toLocal8Bit());
-                                if(!serialPort[portNum].waitForBytesWritten(2000)) {
-                                    qWarning() << "Wrote to port no" << portNum+1 << ", but wasn't sent in time apparently!?";
-                                }
+                                if(!serialPort[portNum].waitForBytesWritten(2000))
+                                    printf("Wrote to port no. %d, but wasn't sent in time apparently!?\n", portNum+1);
                             }
                         }
                     }
@@ -341,16 +324,16 @@ bool qhookerMain::GameStarted(QString input)
                         if(action[i].contains("cmw")) {
                             // we can safely assume that "cmw" on the left side will always be at a set place.
                             uint8_t portNum = action[i].at(action[i].indexOf("cmw")+4).digitValue()-1;
+
                             if(portNum >= 0 && portNum < serialFoundList.count()) {
                                 // if contains %s%, s needs to be replaced by state.
                                 // yes, even here, in case of stupid.
-                                if(action[i].contains("%s%")) {
+                                if(action[i].contains("%s%"))
                                     action[i] = action[i].replace("%s%", "%1").arg(0);
-                                }
+
                                 serialPort[portNum].write(action[i].mid(action[i].indexOf("cmw")+6).toLocal8Bit());
-                                if(!serialPort[portNum].waitForBytesWritten(2000)) {
-                                    qWarning() << "Wrote to port no" << portNum+1 << ", but wasn't sent in time apparently!?";
-                                }
+                                if(!serialPort[portNum].waitForBytesWritten(2000))
+                                    printf("Wrote to port no. %d, but wasn't sent in time apparently!?\n", portNum+1);
                             }
                         }
                     }
@@ -358,19 +341,20 @@ bool qhookerMain::GameStarted(QString input)
             // %s% wildcards: just replace with the number received
             } else {
                 QStringList action = settingsMap[func].split(',', Qt::SkipEmptyParts);
+
                 for(uint8_t i = 0; i < action.length(); i++) {
                     if(action[i].contains("cmw")) {
                         // we can safely assume that "cmw" will always be at a set place.
                         uint8_t portNum = action[i].at(action[i].indexOf("cmw")+4).digitValue()-1;
+
                         if(portNum >= 0 && portNum < serialFoundList.count()) {
                             // if contains %s%, s needs to be replaced by state.
-                            if(action[i].contains("%s%")) {
+                            if(action[i].contains("%s%"))
                                 action[i] = action[i].replace("%s%", "%1").arg(buffer[0].mid(buffer[0].indexOf('=')+2).toInt());
-                            }
+
                             serialPort[portNum].write(action[i].mid(action[i].indexOf("cmw")+6).toLocal8Bit());
-                            if(!serialPort[portNum].waitForBytesWritten(2000)) {
-                                qWarning() << "Wrote to port no" << portNum+1 << ", but wasn't sent in time apparently!?";
-                            }
+                            if(!serialPort[portNum].waitForBytesWritten(2000))
+                                printf("Wrote to port no. %d, but wasn't sent in time apparently!?\n", portNum+1);
                         }
                     }
                 }
@@ -408,28 +392,27 @@ void qhookerMain::ReadyRead()
 void qhookerMain::LoadConfig(QString path)
 {
     settings = new QSettings(path, QSettings::IniFormat);
+
     if(!settings->contains("MameStart")) {
-        qWarning() << "Error loading file at:" << path;
+        printf("Error loading file at: %s\n", path.toLocal8Bit().constData());
         if(!QFile::exists(path) && !path.contains("__empty")) {
             settings->setValue("MameStart", "");
-            settings->setValue("MameStop", "");\
-                settings->setValue("StateChange", "");
+            settings->setValue("MameStop", "");
+            settings->setValue("StateChange", "");
             settings->setValue("OnRotate", "");
             settings->setValue("OnPause", "");
             settings->setValue("KeyStates/RefreshTime", "");
         }
-    } else {
-        qInfo() << "Loading:" << path;
-    }
+    } else printf("Loading: %s\n", path.toLocal8Bit().constData());
+
     settings->beginGroup("Output");
+
     QStringList settingsTemp = settings->childKeys();
     for(uint8_t i = 0; i < settingsTemp.length(); i++) {
         // QSettings splits anything with a comma, so we have to stitch the Q-splitted value back together.
-        if(settings->value(settingsTemp[i]).type() == QVariant::StringList) {
-            settingsMap[settingsTemp[i]] = settings->value(settingsTemp[i]).toStringList().join(",");
-        } else {
-            settingsMap[settingsTemp[i]] = settings->value(settingsTemp[i]).toString();
-        }
+        if(settings->value(settingsTemp[i]).type() == QVariant::StringList)
+             settingsMap[settingsTemp[i]] = settings->value(settingsTemp[i]).toStringList().join(",");
+        else settingsMap[settingsTemp[i]] = settings->value(settingsTemp[i]).toString();
     }
     settings->endGroup();
 }
@@ -437,16 +420,35 @@ void qhookerMain::LoadConfig(QString path)
 void qhookerMain::PrintDeviceInfo(const QList<QSerialPortInfo> &devices)
 {
     for (const QSerialPortInfo &info : devices) {
-        qInfo() << "========================================";
-        qInfo() << "Port Name:" << info.portName();
-        qInfo() << "Vendor Identifier:"
-                << (info.hasVendorIdentifier()
-                        ?  "0x" + QString::number(info.vendorIdentifier(), 16).toUpper()
-                        : "N/A");
-        qInfo() << "Product Identifier:"
-                << (info.hasProductIdentifier()
-                        ?  "0x" + QString::number(info.productIdentifier(), 16).toUpper()
-                        : "N/A");
-        qInfo() << "========================================";
+        printf("========================================\n");
+        printf("Port Name: %s\n", info.portName().toLocal8Bit().constData());
+        printf("Vendor Identifier:  ");
+        if(info.hasVendorIdentifier()) {
+            printf("%04X", info.vendorIdentifier());
+            switch(info.vendorIdentifier()) {
+            case 9025:
+                printf(" (GUN4IR Lightgun)\n");
+                break;
+            case 13939:
+                printf(" (Blamcon Lightgun)\n");
+                break;
+            case 0xF143:
+                printf(" (OpenFIRE Lightgun)\n");
+                break;
+            default:
+                // unlikely to happen due to whitelisting, but just in case.
+                printf("\n");
+                break;
+            }
+        } else printf("N/A\n");
+
+        printf("Product Identifier: ");
+        if(info.hasProductIdentifier())
+            printf("%04X\n", info.productIdentifier());
+        else printf("N/A\n");
+
+        if(!info.manufacturer().isEmpty() && !info.description().isEmpty())
+            printf("Device: %s %s\n", info.manufacturer().toLocal8Bit().constData(), info.description().toLocal8Bit().constData());
+        printf("========================================\n");
     }
 }

@@ -24,7 +24,7 @@ private:
 
     QStringList buffer;
 
-    QString gameName;
+    QByteArray gameName;
 
     QList<QSerialPortInfo> serialFoundList;
 
