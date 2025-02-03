@@ -220,7 +220,7 @@ bool qhookerMain::GameSearching(QString input)
                         if(tempBuffer[0].contains("cmo")) {
                             // open serial port at number (index(4))
                             uint8_t portNum = tempBuffer[0].at(4).digitValue()-1;
-                            if(portNum >= 0 && portNum < serialFoundList.count()) {
+                            if(portNum >= 0 && portNum < validDevices.count()) {
                                 if(!serialPort[portNum].isOpen()) {
                                     serialPort[portNum].open(QIODevice::WriteOnly);
                                     // Just in case Wendies complains:
@@ -232,7 +232,7 @@ bool qhookerMain::GameSearching(QString input)
                             }
                         } else if(tempBuffer[0].contains("cmw")) {
                             uint8_t portNum = tempBuffer[0].at(4).digitValue()-1;
-                            if(portNum >= 0 && portNum < serialFoundList.count()) {
+                            if(portNum >= 0 && portNum < validDevices.count()) {
                                 if(serialPort[portNum].isOpen()) {
                                     serialPort[portNum].write(tempBuffer[0].mid(6).toLocal8Bit());
                                     if(!serialPort[portNum].waitForBytesWritten(2000))
@@ -302,7 +302,7 @@ bool qhookerMain::GameStarted(QString input)
                     for(uint8_t i = 0; i < action.length(); i++) {
                         if(action[i].contains("cmw")) {
                             uint8_t portNum = action[i].at(action[i].indexOf("cmw")+4).digitValue()-1;
-                            if(portNum >= 0 && portNum < serialFoundList.count()) {
+                            if(portNum >= 0 && portNum < validDevices.count()) {
                                 // if contains %s%, s needs to be replaced by state.
                                 // yes, even here, in case of stupid.
                                 if(action[i].contains("%s%"))
@@ -322,7 +322,7 @@ bool qhookerMain::GameStarted(QString input)
                             // we can safely assume that "cmw" on the left side will always be at a set place.
                             uint8_t portNum = action[i].at(action[i].indexOf("cmw")+4).digitValue()-1;
 
-                            if(portNum >= 0 && portNum < serialFoundList.count()) {
+                            if(portNum >= 0 && portNum < validDevices.count()) {
                                 // if contains %s%, s needs to be replaced by state.
                                 // yes, even here, in case of stupid.
                                 if(action[i].contains("%s%"))
@@ -344,7 +344,7 @@ bool qhookerMain::GameStarted(QString input)
                         // we can safely assume that "cmw" will always be at a set place.
                         uint8_t portNum = action[i].at(action[i].indexOf("cmw")+4).digitValue()-1;
 
-                        if(portNum >= 0 && portNum < serialFoundList.count()) {
+                        if(portNum >= 0 && portNum < validDevices.count()) {
                             // if contains %s%, s needs to be replaced by state.
                             if(action[i].contains("%s%"))
                                 action[i] = action[i].replace("%s%", "%1").arg(buffer[0].mid(buffer[0].indexOf('=')+2).toInt());
