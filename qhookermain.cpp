@@ -163,8 +163,8 @@ void qhookerMain::SerialInit()
                 serialPort[i].setStopBits(QSerialPort::OneStop);
                 serialPort[i].setFlowControl(QSerialPort::NoFlowControl);
 
-                printf("Assigning %s with PID %04X to port no. %d\n",
-                       info.portName().toLocal8Bit().constData(), info.productIdentifier(), i+1);
+                printf("Assigning %s (%04X:%04X) to port no. %d\n",
+                       info.portName().toLocal8Bit().constData(), info.vendorIdentifier(), info.productIdentifier(), i+1);
             }
 
             if (duplicateProductIds) {
