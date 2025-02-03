@@ -67,7 +67,7 @@ void qhookerMain::run()
                     }
 
                     // in case we exit without connecting to a game (*coughFLYCASTcough*)
-                    for(uint8_t i = 0; i < serialFoundList.count(); i++) {
+                    for(uint8_t i = 0; i < validDevices.count(); i++) {
                         if(serialPort[i].isOpen()) {
                             serialPort[i].write("E");
                             if(serialPort[i].waitForBytesWritten(2000)) {
@@ -110,9 +110,6 @@ void qhookerMain::SerialInit()
         printf("No devices found! COM devices need to be found at start time.\n");
         quit();
     } else {
-        // Create a list to hold valid devices
-        QList<QSerialPortInfo> validDevices;
-
         // Filter devices based on Vendor IDs (JB = 9025, Props3D = 13939, OpenFIRE = 0xF143)
         for (const QSerialPortInfo &info : serialFoundList) {
             if(info.vendorIdentifier() == 9025  ||  // JB
@@ -228,7 +225,7 @@ bool qhookerMain::GameSearching(QString input)
                                     serialPort[portNum].open(QIODevice::WriteOnly);
                                     // Just in case Wendies complains:
                                     serialPort[portNum].setDataTerminalReady(true);
-                                    printf("Opened port no %d (%s)\n", portNum+1, serialPort[portNum].portName().toLocal8Bit().constData());
+                                    printf("Opened port no. %d (%s)\n", portNum+1, serialPort[portNum].portName().toLocal8Bit().constData());
                                 } else {
                                     printf("Waaaaait a second... Port %d is already open!\n", portNum+1);
                                 }
@@ -281,7 +278,7 @@ bool qhookerMain::GameStarted(QString input)
                 if(settings) {
                     delete settings;
                     settingsMap.clear();
-                    for(uint8_t i = 0; i < serialFoundList.count(); i++) {
+                    for(uint8_t i = 0; i < validDevices.count(); i++) {
                         if(serialPort[i].isOpen()) {
                             serialPort[i].write("E");
                             if(serialPort[i].waitForBytesWritten(2000)) {
