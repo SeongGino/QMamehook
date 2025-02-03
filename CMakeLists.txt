@@ -9,15 +9,28 @@ set(CMAKE_AUTORCC ON)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-find_package(QT NAMES Qt6 Qt5 REQUIRED COMPONENTS Core)
+if(NOT QMH_QT_VERSIONS)
+    set(QMH_QT_VERSIONS Qt6)
+endif()
+
+option(QMH_VERSION "Sets QMamehook version number" OFF)
+option(QMH_GITHASH "Sets QMamehook git hash" OFF)
+
+if(QMH_VERSION)
+    add_compile_definitions(QMH_VERSION="${QMH_VERSION}")
+endif()
+
+if(QMH_GITHASH)
+    add_compile_definitions(QMH_GITHASH="${QMH_GITHASH}")
+endif()
+
+find_package(QT NAMES ${QMH_QT_VERSIONS} REQUIRED COMPONENTS Core)
 find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Core)
 
 add_executable(QMamehook
   main.cpp
-  qhookermain.h qhookermain.cpp
-#  ico.qrc
-
-
+  qhookermain.h
+  qhookermain.cpp
 )
 target_link_libraries(QMamehook PRIVATE Qt${QT_VERSION_MAJOR}::Core)
 
