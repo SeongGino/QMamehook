@@ -92,6 +92,8 @@ void qhookerMain::run()
                                     serialPort[portNum].write("E");
                                     serialPort[portNum].waitForBytesWritten(500);
                                     serialPort[portNum].close();
+                                    printf("Force-closed port no. %d (%04X:%04X @ %s) - was opened incidentally without a corresponding close command.\n",
+                                           portNum+1, validDevices.at(portNum).vendorIdentifier(), validDevices.at(portNum).productIdentifier(), serialPort[portNum].portName().toLocal8Bit().constData());
                                 }
 
                             delete settings;
@@ -345,8 +347,13 @@ bool qhookerMain::GameStarted(const QString &input)
                     }
 
                     for(int portNum = 0; portNum < validDevices.count(); ++portNum)
-                        if(serialPort[portNum].isOpen())
+                        if(serialPort[portNum].isOpen()) {
+                            serialPort[portNum].write("E");
+                            serialPort[portNum].waitForBytesWritten(500);
                             serialPort[portNum].close();
+                            printf("Force-closed port no. %d (%04X:%04X @ %s) - was opened incidentally without a corresponding close command.\n",
+                                   portNum+1, validDevices.at(portNum).vendorIdentifier(), validDevices.at(portNum).productIdentifier(), serialPort[portNum].portName().toLocal8Bit().constData());
+                        }
 
                     delete settings;
                     settingsMap.clear();
