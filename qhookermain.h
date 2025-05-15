@@ -30,17 +30,15 @@ private:
 
     QHash<QString, QString> settingsMap;
 
-    void LoadConfig(QString name);
+    void LoadConfig(const QString &);
 
     void SerialInit();
 
-    bool GameSearching(QString input);
+    bool GameSearching(const QString & = "");
 
-    bool GameStarted(QString input);
+    bool GameStarted(const QString & = "");
 
     void ReadyRead();
-
-    QMap<int, QSerialPort*> serialPortMap;
 
 public:
     explicit qhookerMain(QObject *parent = 0);
