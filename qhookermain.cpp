@@ -57,7 +57,7 @@ void qhookerMain::run()
                     if(!gameName.isEmpty()) {
                         gameName.clear();
 
-                        if(settings && settings->contains("MameStop") && settings->value("MameStop").typeId() == QMetaType::QStringList) {
+                        if(settings && settings->contains("MameStop") && settings->value("MameStop").metaType().id() == QMetaType::QStringList) {
                             QStringList tempBuffer = settings->value("MameStop").toStringList();
                             //qInfo() << tempBuffer;
                             while(!tempBuffer.isEmpty()) {
@@ -316,7 +316,7 @@ bool qhookerMain::GameStarted(const QString &input)
             if(!gameName.isEmpty()) {
                 gameName.clear();
 
-                if(settings && settings->contains("MameStop") && settings->value("MameStop").typeId() == QMetaType::QStringList) {
+                if(settings && settings->contains("MameStop") && settings->value("MameStop").metaType().id() == QMetaType::QStringList) {
                     QStringList tempBuffer = settings->value("MameStop").toStringList();
                     //qInfo() << tempBuffer;
                     while(!tempBuffer.isEmpty()) {
