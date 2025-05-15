@@ -486,9 +486,9 @@ void qhookerMain::LoadConfig(const QString &path)
     settings->beginGroup("Output");
 
     QStringList settingsTemp = settings->childKeys();
-    for(uint8_t i = 0; i < settingsTemp.length(); i++) {
+    for(int i = 0; i < settingsTemp.length(); ++i) {
         // QSettings splits anything with a comma, so we have to stitch the Q-splitted value back together.
-        if(settings->value(settingsTemp[i]).type() == QVariant::StringList)
+        if(settings->value(settingsTemp[i]).metaType().id() == QMetaType::QStringList)
              settingsMap[settingsTemp[i]] = settings->value(settingsTemp[i]).toStringList().join(",");
         else settingsMap[settingsTemp[i]] = settings->value(settingsTemp[i]).toString();
     }
