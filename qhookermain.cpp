@@ -56,9 +56,56 @@ void qhookerMain::run()
 
                     if(!gameName.isEmpty()) {
                         gameName.clear();
-                        if(settings) {
+
+                        if(settings && settings->contains("MameStop") && settings->value("MameStop").typeId() == QMetaType::QStringList) {
+                            QStringList tempBuffer = settings->value("MameStop").toStringList();
+                            //qInfo() << tempBuffer;
+                            while(!tempBuffer.isEmpty()) {
+                                if(tempBuffer.at(0).contains("cmw")) {
+                                    int portNum = tempBuffer.at(0).at(4).digitValue()-1;
+                                    if(portNum >= 0 && portNum < validDevices.count()) {
+                                        if(serialPort[portNum].isOpen()) {
+                                            serialPort[portNum].write(tempBuffer.at(0).mid(6).toLocal8Bit());
+                                            if(!serialPort[portNum].waitForBytesWritten(500))
+                                                printf("Wrote to port no. %d (%04X:%04X @ %s), but wasn't sent in time apparently!?\n",
+                                                       portNum+1, validDevices.at(portNum).vendorIdentifier(), validDevices.at(portNum).productIdentifier(), serialPort[portNum].portName().toLocal8Bit().constData());
+                                        } else  printf("Requested to write to port no. %d (%04X:%04X @ %s), but it's not even open yet!\n",
+                                                   portNum+1, validDevices.at(portNum).vendorIdentifier(), validDevices.at(portNum).productIdentifier(), serialPort[portNum].portName().toLocal8Bit().constData());
+                                    }
+                                } else if(tempBuffer.at(0).contains("cmc")) {
+                                    // close serial port at number (index(4))
+                                    int portNum = tempBuffer.at(0).at(4).digitValue()-1;
+                                    if(portNum >= 0 && portNum < validDevices.count()) {
+                                        if(serialPort[portNum].isOpen()) {
+                                            serialPort[portNum].close();
+                                            printf("Closed port no. %d (%04X:%04X @ %s)\n",
+                                                   portNum+1, validDevices.at(portNum).vendorIdentifier(), validDevices.at(portNum).productIdentifier(), serialPort[portNum].portName().toLocal8Bit().constData());
+                                        } else printf("Waaaaait a second... Port %d (%04X:%04X @ %s) is already closed!\n",
+                                                   portNum+1, validDevices.at(portNum).vendorIdentifier(), validDevices.at(portNum).productIdentifier(), serialPort[portNum].portName().toLocal8Bit().constData());
+                                    }
+                                }
+                                tempBuffer.removeFirst();
+                            }
+
+                            for(int portNum = 0; portNum < validDevices.count(); ++portNum)
+                                if(serialPort[portNum].isOpen()) {
+                                    serialPort[portNum].write("E");
+                                    serialPort[portNum].waitForBytesWritten(500);
+                                    serialPort[portNum].close();
+                                }
+
                             delete settings;
                             settingsMap.clear();
+                        } else for(int portNum = 0; portNum < validDevices.count(); ++portNum) {
+                            if(serialPort[portNum].isOpen()) {
+                                serialPort[portNum].write("E");
+                                if(serialPort[portNum].waitForBytesWritten(500)) {
+                                    serialPort[portNum].close();
+                                    printf("Force-closed port no. %d (%04X:%04X @ %s) since this game has no MameStop entry.\n",
+                                           portNum+1, validDevices.at(portNum).vendorIdentifier(), validDevices.at(portNum).productIdentifier(), serialPort[portNum].portName().toLocal8Bit().constData());
+                                } else printf("Sent close signal to port %d (%04X:%04X @ %s), but wasn't sent in time apparently!?\n",
+                                           portNum+1, validDevices.at(portNum).vendorIdentifier(), validDevices.at(portNum).productIdentifier(), serialPort[portNum].portName().toLocal8Bit().constData());
+                            }
                         }
                     }
 
@@ -66,19 +113,6 @@ void qhookerMain::run()
                         printf("Application closing due to -c argument.\n");
                         quit();
                         return;
-                    }
-
-                    // in case we exit without connecting to a game (*coughFLYCASTcough*)
-                    for(uint8_t i = 0; i < validDevices.count(); i++) {
-                        if(serialPort[i].isOpen()) {
-                            serialPort[i].write("E");
-                            if(serialPort[i].waitForBytesWritten(2000)) {
-                                printf("Closed port %d (%s)\n", i+1, serialPort[i].portName().toLocal8Bit().constData());
-                                serialPort[i].close();
-                            } else {
-                                printf("Sent close signal to port %d, but wasn't sent in time apparently!?\n", i+1);
-                            }
-                        }
                     }
                 }
             }
@@ -239,7 +273,7 @@ bool qhookerMain::GameSearching(const QString &input)
                             if(portNum >= 0 && portNum < validDevices.count()) {
                                 if(serialPort[portNum].isOpen()) {
                                     serialPort[portNum].write(tempBuffer.at(0).mid(6).toLocal8Bit());
-                                    if(!serialPort[portNum].waitForBytesWritten(2000))
+                                    if(!serialPort[portNum].waitForBytesWritten(500))
                                         printf("Wrote to port no. %d (%04X:%04X @ %s), but wasn't sent in time apparently!?\n",
                                                portNum+1, validDevices.at(portNum).vendorIdentifier(), validDevices.at(portNum).productIdentifier(), serialPort[portNum].portName().toLocal8Bit().constData());
                                 } else  printf("Requested to write to port no. %d (%04X:%04X @ %s), but it's not even open yet!\n",
@@ -280,7 +314,7 @@ bool qhookerMain::GameStarted(const QString &input)
             if(!gameName.isEmpty()) {
                 gameName.clear();
 
-                if(settings && settings->contains("MameStop")) {
+                if(settings && settings->contains("MameStop") && settings->value("MameStop").typeId() == QMetaType::QStringList) {
                     QStringList tempBuffer = settings->value("MameStop").toStringList();
                     //qInfo() << tempBuffer;
                     while(!tempBuffer.isEmpty()) {
@@ -289,7 +323,7 @@ bool qhookerMain::GameStarted(const QString &input)
                             if(portNum >= 0 && portNum < validDevices.count()) {
                                 if(serialPort[portNum].isOpen()) {
                                     serialPort[portNum].write(tempBuffer.at(0).mid(6).toLocal8Bit());
-                                    if(!serialPort[portNum].waitForBytesWritten(2000))
+                                    if(!serialPort[portNum].waitForBytesWritten(500))
                                         printf("Wrote to port no. %d (%04X:%04X @ %s), but wasn't sent in time apparently!?\n",
                                                portNum+1, validDevices.at(portNum).vendorIdentifier(), validDevices.at(portNum).productIdentifier(), serialPort[portNum].portName().toLocal8Bit().constData());
                                 } else  printf("Requested to write to port no. %d (%04X:%04X @ %s), but it's not even open yet!\n",
@@ -310,12 +344,16 @@ bool qhookerMain::GameStarted(const QString &input)
                         tempBuffer.removeFirst();
                     }
 
+                    for(int portNum = 0; portNum < validDevices.count(); ++portNum)
+                        if(serialPort[portNum].isOpen())
+                            serialPort[portNum].close();
+
                     delete settings;
                     settingsMap.clear();
                 } else for(int portNum = 0; portNum < validDevices.count(); ++portNum) {
                     if(serialPort[portNum].isOpen()) {
                         serialPort[portNum].write("E");
-                        if(serialPort[portNum].waitForBytesWritten(2000)) {
+                        if(serialPort[portNum].waitForBytesWritten(500)) {
                             serialPort[portNum].close();
                             printf("Force-closed port no. %d (%04X:%04X @ %s) since this game has no MameStop entry.\n",
                                    portNum+1, validDevices.at(portNum).vendorIdentifier(), validDevices.at(portNum).productIdentifier(), serialPort[portNum].portName().toLocal8Bit().constData());
@@ -344,7 +382,7 @@ bool qhookerMain::GameStarted(const QString &input)
                                     action[i] = action[i].replace("%s%", "%1").arg(1);
 
                                 serialPort[portNum].write(action.at(i).mid(action.at(i).indexOf("cmw")+6).toLocal8Bit());
-                                if(!serialPort[portNum].waitForBytesWritten(2000))
+                                if(!serialPort[portNum].waitForBytesWritten(500))
                                     printf("Wrote to port no. %d (%04X:%04X @ %s), but wasn't sent in time apparently!?\n",
                                            portNum+1, validDevices.at(portNum).vendorIdentifier(), validDevices.at(portNum).productIdentifier(), serialPort[portNum].portName().toLocal8Bit().constData());
                             }
@@ -365,7 +403,7 @@ bool qhookerMain::GameStarted(const QString &input)
                                     action[i] = action[i].replace("%s%", "%1").arg(0);
 
                                 serialPort[portNum].write(action.at(i).mid(action.at(i).indexOf("cmw")+6).toLocal8Bit());
-                                if(!serialPort[portNum].waitForBytesWritten(2000))
+                                if(!serialPort[portNum].waitForBytesWritten(500))
                                     printf("Wrote to port no. %d (%04X:%04X @ %s), but wasn't sent in time apparently!?\n",
                                            portNum+1, validDevices.at(portNum).vendorIdentifier(), validDevices.at(portNum).productIdentifier(), serialPort[portNum].portName().toLocal8Bit().constData());
                             }
@@ -387,7 +425,7 @@ bool qhookerMain::GameStarted(const QString &input)
                                 action[i] = action[i].replace("%s%", "%1").arg(buffer[0].mid(buffer[0].indexOf('=')+2).toInt());
 
                             serialPort[portNum].write(action.at(i).mid(action.at(i).indexOf("cmw")+6).toLocal8Bit());
-                            if(!serialPort[portNum].waitForBytesWritten(2000))
+                            if(!serialPort[portNum].waitForBytesWritten(500))
                                 printf("Wrote to port no. %d (%04X:%04X @ %s), but wasn't sent in time apparently!?\n",
                                        portNum+1, validDevices.at(portNum).vendorIdentifier(), validDevices.at(portNum).productIdentifier(), serialPort[portNum].portName().toLocal8Bit().constData());
                         }
