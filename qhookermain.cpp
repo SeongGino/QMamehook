@@ -57,7 +57,7 @@ void qhookerMain::run()
                     if(!gameName.isEmpty()) {
                         gameName.clear();
 
-                        if(settings && settings->contains("MameStop") && settings->value("MameStop").metaType().id() == QMetaType::QStringList) {
+                        if(settings && settings->contains("MameStop") && settings->value("MameStop").type() == QMetaType::QStringList) {
                             QStringList tempBuffer = settings->value("MameStop").toStringList();
                             //qInfo() << tempBuffer;
                             while(!tempBuffer.isEmpty()) {
@@ -316,7 +316,7 @@ bool qhookerMain::GameStarted(const QString &input)
             if(!gameName.isEmpty()) {
                 gameName.clear();
 
-                if(settings && settings->contains("MameStop") && settings->value("MameStop").metaType().id() == QMetaType::QStringList) {
+                if(settings && settings->contains("MameStop") && settings->value("MameStop").type() == QMetaType::QStringList) {
                     QStringList tempBuffer = settings->value("MameStop").toStringList();
                     //qInfo() << tempBuffer;
                     while(!tempBuffer.isEmpty()) {
@@ -488,7 +488,7 @@ void qhookerMain::LoadConfig(const QString &path)
     QStringList settingsTemp = settings->childKeys();
     for(int i = 0; i < settingsTemp.length(); ++i) {
         // QSettings splits anything with a comma, so we have to stitch the Q-splitted value back together.
-        if(settings->value(settingsTemp[i]).metaType().id() == QMetaType::QStringList)
+        if(settings->value(settingsTemp[i]).type() == QMetaType::QStringList)
              settingsMap[settingsTemp[i]] = settings->value(settingsTemp[i]).toStringList().join(",");
         else settingsMap[settingsTemp[i]] = settings->value(settingsTemp[i]).toString();
     }
