@@ -94,7 +94,7 @@ jobs:
       if: ${{ matrix.os != 'windows-2019' }}
       run: |
         make install DESTDIR=AppDir
-        "${{ runner.temp }}/linuxdeploy/linuxdeploy-${{ matrix.sys_arch }}.AppImage" --plugin=qt --output appimage --appdir AppDir"
+        "${{ runner.temp }}/linuxdeploy/linuxdeploy-${{ matrix.sys_arch }}.AppImage" --plugin=qt --output appimage --appdir AppDir
         cp ${{ matrix.file }} ${{ github.workspace }}
       working-directory: ${{ github.workspace }}/build
 
