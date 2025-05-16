@@ -217,7 +217,7 @@ void qhookerMain::AddNewDevices(const QList<QSerialPortInfo> &newDevices)
     printf("\n");
 
     // Keep track of assigned PIDs and check for duplicates
-    QSet<int32_t> newPids;
+    QSet<uint32_t> newPids;
     bool duplicateProductIds = false;
     int i = 0;
 
