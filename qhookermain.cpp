@@ -190,9 +190,9 @@ void qhookerMain::SerialInit()
                 AddNewDevices(newDevices);
             } else for(const auto &newPort : std::as_const(newDevices)) {
                 if(!validIDs.contains(newPort.vendorIdentifier() | newPort.productIdentifier() << 16)) {
-                    qDebug() << validIDs;
                     printf("%04X:%04X not found in current ports, overriding old serial devices list...\n\n",
                            newPort.vendorIdentifier(), newPort.productIdentifier());
+                    PrintDeviceInfo(newDevices);
                     AddNewDevices(newDevices);
                     break;
                 }
