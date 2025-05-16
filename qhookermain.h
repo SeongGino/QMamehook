@@ -28,7 +28,7 @@ private:
 
     QList<QSerialPortInfo> validDevices;
 
-    QSet<uint32_t> validIDs;
+    QSet<int32_t> validIDs;
 
     QHash<QString, QString> settingsMap;
 
