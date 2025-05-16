@@ -16,11 +16,11 @@ class qhookerMain : public QObject
 private:
     QCoreApplication *mainApp;
 
-    QSettings *settings;
+    QSettings *settings = nullptr;
 
     QTcpSocket tcpSocket;
 
-    QSerialPort *serialPort;
+    QVector<QSerialPort*> serialPort;
 
     QStringList buffer;
 
@@ -28,11 +28,15 @@ private:
 
     QList<QSerialPortInfo> validDevices;
 
+    QSet<uint32_t> validIDs;
+
     QHash<QString, QString> settingsMap;
 
     void LoadConfig(const QString &);
 
     void SerialInit();
+
+    void AddNewDevices(const QList<QSerialPortInfo> &);
 
     bool GameSearching(const QString & = "");
 
