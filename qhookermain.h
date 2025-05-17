@@ -36,7 +36,7 @@ private:
 
     void SerialInit();
 
-    void AddNewDevices(const QList<QSerialPortInfo> &);
+    void AddNewDevices(QList<QSerialPortInfo> &);
 
     bool GameSearching(const QString & = "");
 
@@ -45,6 +45,13 @@ private:
     void ReadyRead();
 
 public:
+    enum {
+        sortPIDascend = 0,
+        sortPIDdescend,
+        sortPortAscend,
+        sortPortDescend
+    } sortTypes_e;
+
     explicit qhookerMain(QObject *parent = 0);
 
     bool verbosity = false;
@@ -53,9 +60,9 @@ public:
 
     bool closeOnDisconnect = false;
 
-    QString customPath;
+    int sortType = sortPIDascend;
 
-    void PrintDeviceInfo(const QList<QSerialPortInfo> &devices);
+    QString customPath;
 
     void quit();
 

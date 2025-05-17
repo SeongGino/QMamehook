@@ -156,6 +156,7 @@ void qhookerMain::SerialInit()
             for(auto &port : serialPort)
                 delete port;
             serialPort.clear();
+            printf("No devices found!\n");
         }
     } else {
         QList<QSerialPortInfo> newDevices;
@@ -176,23 +177,16 @@ void qhookerMain::SerialInit()
                 for(auto &port : serialPort)
                     delete port;
                 serialPort.clear();
+                printf("No devices found!\n");
             }
         } else {
-            // Sort valid devices by Product ID ascending
-            std::sort(newDevices.begin(), newDevices.end(),
-                      [](const QSerialPortInfo &a, const QSerialPortInfo &b) {
-                          return a.productIdentifier() < b.productIdentifier();
-                      });
-
             if(newDevices.size() != validDevices.size()) {
                 printf("Current ports list does not match new list, overriding...\n\n");
-                PrintDeviceInfo(newDevices);
                 AddNewDevices(newDevices);
             } else for(const auto &newPort : std::as_const(newDevices)) {
                 if(!validIDs.contains(newPort.vendorIdentifier() | newPort.productIdentifier() << 16)) {
                     printf("%04X:%04X not found in current ports, overriding old serial devices list...\n\n",
                            newPort.vendorIdentifier(), newPort.productIdentifier());
-                    PrintDeviceInfo(newDevices);
                     AddNewDevices(newDevices);
                     break;
                 }
@@ -202,7 +196,7 @@ void qhookerMain::SerialInit()
 }
 
 
-void qhookerMain::AddNewDevices(const QList<QSerialPortInfo> &newDevices)
+void qhookerMain::AddNewDevices(QList<QSerialPortInfo> &newDevices)
 {
     if(serialPort.count()) {
         for(auto &port : serialPort)
@@ -213,6 +207,92 @@ void qhookerMain::AddNewDevices(const QList<QSerialPortInfo> &newDevices)
     // Create our array of QSerialPorts, sized to the number of valid devices
     for(const auto &device : newDevices)
         serialPort << new QSerialPort;
+
+    switch(sortType) {
+    case sortPIDascend:
+        std::sort(newDevices.begin(), newDevices.end(),
+                  [](const QSerialPortInfo &a, const QSerialPortInfo &b) {
+                      return a.productIdentifier() < b.productIdentifier();
+                  });
+        break;
+    case sortPIDdescend:
+        std::sort(newDevices.begin(), newDevices.end(),
+                  [](const QSerialPortInfo &a, const QSerialPortInfo &b) {
+                      return a.productIdentifier() > b.productIdentifier();
+                  });
+        break;
+    case sortPortAscend:
+        std::sort(newDevices.begin(), newDevices.end(),
+                  [](const QSerialPortInfo &a, const QSerialPortInfo &b) {
+                      return a.portName().mid(
+                                             #ifdef Q_OS_WIN
+                                             3 // COM
+                                             #else
+                                             6 // ttyACM
+                                             #endif
+                                             ).toInt() < b.portName().mid(
+                                                                          #ifdef Q_OS_WIN
+                                                                          3
+                                                                          #else
+                                                                          6
+                                                                          #endif
+                                                                          ).toInt();
+                  });
+        break;
+    case sortPortDescend:
+        std::sort(newDevices.begin(), newDevices.end(),
+                  [](const QSerialPortInfo &a, const QSerialPortInfo &b) {
+                      return a.portName().mid(
+                                             #ifdef Q_OS_WIN
+                                             3 // COM
+                                             #else
+                                             6 // ttyACM
+                                             #endif
+                                             ).toInt() > b.portName().mid(
+                                                                         #ifdef Q_OS_WIN
+                                                                         3
+                                                                         #else
+                                                                         6
+                                                                         #endif
+                                                                         ).toInt();
+                  });
+        break;
+    default:
+        break;
+    }
+
+    for (const QSerialPortInfo &info : newDevices) {
+        printf("========================================\n");
+        printf("Port Name: %s\n", info.portName().toLocal8Bit().constData());
+        printf("Vendor Identifier:  ");
+        if(info.hasVendorIdentifier()) {
+            printf("%04X", info.vendorIdentifier());
+            switch(info.vendorIdentifier()) {
+            case 9025:
+                printf(" (GUN4IR Lightgun)\n");
+                break;
+            case 13939:
+                printf(" (Blamcon Lightgun)\n");
+                break;
+            case 0xF143:
+                printf(" (OpenFIRE Lightgun)\n");
+                break;
+            default:
+                // unlikely to happen due to whitelisting, but just in case.
+                printf("\n");
+                break;
+            }
+        } else printf("N/A\n");
+
+        printf("Product Identifier: ");
+        if(info.hasProductIdentifier())
+            printf("%04X\n", info.productIdentifier());
+        else printf("N/A\n");
+
+        if(!info.manufacturer().isEmpty() && !info.description().isEmpty())
+            printf("Device: %s %s\n", info.manufacturer().toLocal8Bit().constData(), info.description().toLocal8Bit().constData());
+        printf("========================================\n");
+    }
 
     printf("\n");
 
@@ -533,40 +613,4 @@ void qhookerMain::LoadConfig(const QString &path)
         else settingsMap[settingsTemp[i]] = settings->value(settingsTemp[i]).toString();
     }
     settings->endGroup();
-}
-
-void qhookerMain::PrintDeviceInfo(const QList<QSerialPortInfo> &devices)
-{
-    for (const QSerialPortInfo &info : devices) {
-        printf("========================================\n");
-        printf("Port Name: %s\n", info.portName().toLocal8Bit().constData());
-        printf("Vendor Identifier:  ");
-        if(info.hasVendorIdentifier()) {
-            printf("%04X", info.vendorIdentifier());
-            switch(info.vendorIdentifier()) {
-            case 9025:
-                printf(" (GUN4IR Lightgun)\n");
-                break;
-            case 13939:
-                printf(" (Blamcon Lightgun)\n");
-                break;
-            case 0xF143:
-                printf(" (OpenFIRE Lightgun)\n");
-                break;
-            default:
-                // unlikely to happen due to whitelisting, but just in case.
-                printf("\n");
-                break;
-            }
-        } else printf("N/A\n");
-
-        printf("Product Identifier: ");
-        if(info.hasProductIdentifier())
-            printf("%04X\n", info.productIdentifier());
-        else printf("N/A\n");
-
-        if(!info.manufacturer().isEmpty() && !info.description().isEmpty())
-            printf("Device: %s %s\n", info.manufacturer().toLocal8Bit().constData(), info.description().toLocal8Bit().constData());
-        printf("========================================\n");
-    }
 }
