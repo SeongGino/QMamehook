@@ -66,6 +66,12 @@ int main(int argc, char *argv[])
             arguments.removeAt(arguments.indexOf("-v"));
         }
 
+        if(arguments.contains("-c")) {
+            mainApp.closeOnDisconnect = true;
+            printf("This session will close upon disconnect.\n");
+            arguments.removeAt(arguments.indexOf("-c"));
+        }
+
         if(arguments.contains("-p")) {
             if(arguments.indexOf("-p") < arguments.count()-1) {
                 // QDir::fromNativeSeparators uses forwardslashes on both OSes, thank Parace
@@ -80,7 +86,8 @@ int main(int argc, char *argv[])
 
                 if(QFile::exists(mainApp.customPath)) {
                     printf("Setting search path to \"%s\"\n\n", mainApp.customPath.toLocal8Bit().constData());
-                    arguments.remove(arguments.indexOf("-p"), 2);
+                    arguments.removeAt(arguments.indexOf("-p")+1);
+                    arguments.removeAt(arguments.indexOf("-p"));
                 } else {
                     printf("ERROR: Specified custom path \"%s\" does not seem to exist!\n", arguments.at(arguments.indexOf("-p")+1).toLocal8Bit().constData());
                     return 1;
@@ -89,12 +96,6 @@ int main(int argc, char *argv[])
                 printf("ERROR: Custom path flag called without any path specified!\n");
                 return 1;
             }
-        }
-
-        if(arguments.contains("-c")) {
-            mainApp.closeOnDisconnect = true;
-            printf("This session will close upon disconnect.\n");
-            arguments.removeAt(arguments.indexOf("-c"));
         }
 
         if(arguments.contains("-s")) {
@@ -120,7 +121,8 @@ int main(int argc, char *argv[])
                     return 1;
                 }
 
-                arguments.remove(arguments.indexOf("-s"), 2);
+                arguments.removeAt(arguments.indexOf("-s")+1);
+                arguments.removeAt(arguments.indexOf("-s"));
             } else {
                 printf("ERROR: No sorting type specified!\n");
                 return 1;
