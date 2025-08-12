@@ -13,11 +13,11 @@ jobs:
       fail-fast: false
 
       matrix:
-        os: [ubuntu-22.04, ubuntu-22.04-arm, windows-2019]
+        os: [ubuntu-22.04, ubuntu-22.04-arm, windows-latest]
         qt_version: [5.15.2, 6.7.3]
         build_type: [Release]
         include:
-          - os: windows-2019
+          - os: windows-latest
             c_compiler: cl
             cpp_compiler: cl
             file: build
@@ -42,7 +42,7 @@ jobs:
             install_prefix: -DCMAKE_INSTALL_PREFIX=/usr
             pretty: "Linux ARM AppImage"
         exclude:
-          - os: windows-2019
+          - os: windows-latest
             qt_version: 6.7.3
           - os: ubuntu-22.04
             qt_version: 6.7.3
@@ -84,13 +84,13 @@ jobs:
       run: cmake --build ${{ github.workspace }}/build --config ${{ matrix.build_type }} --parallel
 
     - name: Install linuxdeploy
-      if: ${{ matrix.os != 'windows-2019' }}
+      if: ${{ matrix.os != 'windows-latest' }}
       uses: pcolby/install-linuxdeploy@v1
       with:
         plugins: qt appimage
 
     - name: Setup AppImage
-      if: ${{ matrix.os != 'windows-2019' }}
+      if: ${{ matrix.os != 'windows-latest' }}
       run: |
         make install DESTDIR=AppDir
         "${{ runner.temp }}/linuxdeploy/linuxdeploy-${{ matrix.sys_arch }}.AppImage" --plugin=qt --output appimage --appdir AppDir
