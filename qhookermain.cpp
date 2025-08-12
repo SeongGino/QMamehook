@@ -160,10 +160,11 @@ void qhookerMain::SerialInit()
         }
     } else {
         QList<QSerialPortInfo> newDevices;
-        // Filter devices based on Vendor IDs (JB = 9025, Props3D = 13939, OpenFIRE = 0xF143)
+        // Filter devices based on Vendor IDs:
         for (const QSerialPortInfo &info : std::as_const(serialFoundList)) {
-            if(info.vendorIdentifier() == 9025  ||  // JB
-               info.vendorIdentifier() == 13939 ||  // Props3D
+            if(info.vendorIdentifier() == 9025   || // JB
+               info.vendorIdentifier() == 13939  || // Props3D
+               info.vendorIdentifier() == 0x0483 || // RS3 Reaper (requires manual modprobe by user)
                info.vendorIdentifier() == 0xF143)   // OpenFIRE
                 newDevices.append(info);
             else if(!info.portName().startsWith("ttyS"))
@@ -266,16 +267,19 @@ void qhookerMain::AddNewDevices(QList<QSerialPortInfo> &newDevices)
         printf("Port Name: %s\n", info.portName().toLocal8Bit().constData());
         printf("Vendor Identifier:  ");
         if(info.hasVendorIdentifier()) {
-            printf("%04X", info.vendorIdentifier());
+            printf("%04X ", info.vendorIdentifier());
             switch(info.vendorIdentifier()) {
             case 9025:
-                printf(" (GUN4IR Lightgun)\n");
+                printf("(GUN4IR Lightgun)\n");
                 break;
             case 13939:
-                printf(" (Blamcon Lightgun)\n");
+                printf("(Blamcon Lightgun)\n");
+                break;
+            case 0x0483:
+                printf("(RetroShooter Lightgun)");
                 break;
             case 0xF143:
-                printf(" (OpenFIRE Lightgun)\n");
+                printf("(OpenFIRE Lightgun)\n");
                 break;
             default:
                 // unlikely to happen due to whitelisting, but just in case.

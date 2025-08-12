@@ -9,8 +9,9 @@ A bare-bones implementation of a MAME network output client, made primarily for 
  - Cross-platform: i.e, works natively on Linux for native emulators, and the same code runs just as well on Windows.
  - Modern: Built on C++ & QT5/6, and made to interface with the MAME network output *standard*, meaning implicit support e.g. for RetroArch cores that use TCP localhost:8000 for feeding force feedback events.
  - Small & Simple: runs in the background with a single command, no admin privileges necessary.
- - Designed for light guns: Made for and exclusively compatible with the serial port interface used by PC light gun systems (which currently are [OpenFIRE](https://github.com/TeamOpenFIRE/OpenFIRE-Firmware), [GUN4IR](https://forum.arcadecontrols.com/index.php/topic,161189.0.html), and the [Blamcon](https://blamcon.com/) systems).
+ - Designed for light guns: Made for and exclusively compatible with the serial port interface used by PC light gun systems (which currently are [OpenFIRE](https://github.com/TeamOpenFIRE/OpenFIRE-Firmware), [GUN4IR](https://forum.arcadecontrols.com/index.php/topic,161189.0.html), [Blamcon](https://blamcon.com/) systems, and the RetroShooter RS3*).
  - Compatible with MAMEHOOKER configs: Uses the same *.ini* files verbatim, no changes needed!
+##### *requires manual whitelisting on Linux
 
 ### Why would you NOT use this over MAMEHOOKER?
  - It's barebones: Strictly only supports light gun peripherals over serial (COM devices).
@@ -49,6 +50,12 @@ Only programs with *network outputs support* (event packets sent over TCP @ loca
 Just run the `QMamehook` executable in a terminal; send an interrupt signal (or `pkill QMamehook`) to stop it.
 
 Game config files are searched in `~/.config/QMamehook/ini`, and the program output will indicate whether a correct file matching the `mame_start` message is found or not.
+
+> [!NOTE]
+> RS3 users will have to manually probe the usbserial driver to expose this device's serial port, which can be done as follows (as root/with sudo privileges):
+> ```
+> # modprobe usbserial vendor=0x0483 product=0x5750
+> ```
 ### For Windows:
 ##### Requirements: Windows 7 and up.
  - Download the latest release zip.
