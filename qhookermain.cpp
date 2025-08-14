@@ -165,7 +165,7 @@ void qhookerMain::SerialInit()
             if(info.vendorIdentifier() == 9025   || // JB
                info.vendorIdentifier() == 13939  || // Props3D
                info.vendorIdentifier() == 0xF143 || // OpenFIRE
-               (info.vendorIdentifier() == 0x0483 && info.productIdentifier() == 0x5740)) // RS3 Reaper (requires manual modprobe by user)
+               (info.vendorIdentifier() == 0x0483 && info.productIdentifier() == 0x5740)) // RS3 Reaper Gun, not Hub (requires manual modprobe by user)
                 newDevices.append(info);
             else if(!info.portName().startsWith("ttyS"))
                 printf("Unknown device found: %s\n", info.portName().toLocal8Bit().constData());
